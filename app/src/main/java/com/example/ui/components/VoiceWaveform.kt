@@ -61,6 +61,16 @@ fun VoiceWaveform(
         label = "waveformPhase"
     )
 
+    val barCount = 36
+
+    // Pre-calculate Gaussian bell curve values to avoid expensive pow/exp operations on every frame
+    val bellCurveValues = remember(barCount) {
+        FloatArray(barCount) { i ->
+            val progress = i.toFloat() / (barCount - 1)
+            exp(-((progress - 0.5) / 0.28).pow(2.0)).toFloat()
+        }
+    }
+
     val waveColors = when {
         isListening -> listOf(
             Color(0xFF00E5FF), // Cyan
@@ -85,7 +95,6 @@ fun VoiceWaveform(
     ) {
         val width = size.width
         val height = size.height
-        val barCount = 36
         val barSpacingFactor = 0.35f
         val totalSpacing = width * barSpacingFactor
         val barWidth = (width - totalSpacing) / barCount
@@ -96,7 +105,7 @@ fun VoiceWaveform(
             val progress = i.toFloat() / (barCount - 1) // 0f to 1f
 
             // Gaussian bell curve centered in the middle (human voice formant spectrum)
-            val bell = exp(-((progress - 0.5) / 0.28).pow(2.0)).toFloat()
+            val bell = bellCurveValues[i]
 
             // Dynamic sine variations combined with real-time audio input level
             val waveOscillation = if (isListening) {
