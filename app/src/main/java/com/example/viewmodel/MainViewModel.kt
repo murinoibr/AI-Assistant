@@ -102,24 +102,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
         }
     }
 
-    private fun getApiKey(): String {
+    private val cachedApiKey: String by lazy {
         val configKey = try {
             val field = com.example.BuildConfig::class.java.getField("GEMINI_API_KEY")
             (field.get(null) as? String)?.takeIf { it.isNotBlank() && it != "MY_GEMINI_API_KEY" }
         } catch (e: Exception) {
             null
         }
-        return configKey ?: "AQ.Ab8RN6JiI5KmEyEingef2-ttIi7buawByh9aEhKjrl_pJT-IUg"
+        configKey ?: "AQ.Ab8RN6JiI5KmEyEingef2-ttIi7buawByh9aEhKjrl_pJT-IUg"
     }
 
-    private fun getOpenCodeApiKey(): String {
+    private fun getApiKey(): String {
+        return cachedApiKey
+    }
+
+    private val cachedOpenCodeApiKey: String by lazy {
         val key = try {
             val field = com.example.BuildConfig::class.java.getField("OPENCODE_API_KEY")
             (field.get(null) as? String)?.takeIf { it.isNotBlank() && it != "MY_OPENCODE_API_KEY" }
         } catch (e: Exception) {
             null
         }
-        return key ?: "oc_sk_132e769f4a78_Qsp7flsrtBCdDQQsnCGJb5wpToOznP_T"
+        key ?: "oc_sk_132e769f4a78_Qsp7flsrtBCdDQQsnCGJb5wpToOznP_T"
+    }
+
+    private fun getOpenCodeApiKey(): String {
+        return cachedOpenCodeApiKey
     }
 
     private val _openAiApiKey = MutableStateFlow(getApiKey())
