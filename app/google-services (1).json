@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "962659604635",
+    "project_id": "gen-lang-client-0178737561",
+    "storage_bucket": "gen-lang-client-0178737561.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:962659604635:android:c708f15fa298f552b44e3e",
+        "android_client_info": {
+          "package_name": "com.murinoi.aiassistant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAteAvsmCl1bQVqMQ1OEpiPA6S1TMqIAu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
