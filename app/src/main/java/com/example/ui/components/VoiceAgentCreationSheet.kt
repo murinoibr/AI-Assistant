@@ -96,81 +96,39 @@ fun VoiceAgentCreationSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Criar Agente por Voz",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPureWhite
-                    )
-                    Text(
-                        text = "Diga como quer que seu novo assistente seja",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextMuted
-                    )
-                }
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(SurfaceGlass, CircleShape)
-                ) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "Fechar", tint = TextMuted)
-                }
-            }
+            SheetHeader(onDismiss = onDismiss)
 
             Spacer(modifier = Modifier.height(28.dp))
 
             // Main Voice Button
-            Box(
-                modifier = Modifier
-                    .size(110.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = if (isListening) listOf(VividMagenta, ElectricViolet)
-                            else listOf(NeonCyan, NeonBlue)
-                        ),
-                        shape = CircleShape
-                    )
-                    .clickable {
-                        if (isListening) {
-                            speechRecognizer?.stopListening()
-                            isListening = false
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            if (speechRecognizer != null) {
-                                isListening = true
-                                startVoiceCreationSpeech(context, speechRecognizer) { result ->
-                                    isListening = false
-                                    spokenVoicePrompt = result
-                                    if (result.isNotBlank()) {
-                                        viewModel.createAgentViaVoiceDescription(result) {
-                                            onDismiss()
-                                        }
+            VoiceRecordingButton(
+                isListening = isListening,
+                onToggleListening = {
+                    if (isListening) {
+                        speechRecognizer?.stopListening()
+                        isListening = false
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        if (speechRecognizer != null) {
+                            isListening = true
+                            startVoiceCreationSpeech(context, speechRecognizer) { result ->
+                                isListening = false
+                                spokenVoicePrompt = result
+                                if (result.isNotBlank()) {
+                                    viewModel.createAgentViaVoiceDescription(result) {
+                                        onDismiss()
                                     }
                                 }
-                            } else {
-                                // Fallback simulation
-                                viewModel.createAgentViaVoiceDescription("Assistente para dicas de investimentos e finanças") {
-                                    onDismiss()
-                                }
+                            }
+                        } else {
+                            // Fallback simulation
+                            viewModel.createAgentViaVoiceDescription("Assistente para dicas de investimentos e finanças") {
+                                onDismiss()
                             }
                         }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = "Falar ideia do agente",
-                    tint = Color.White,
-                    modifier = Modifier.size(52.dp)
-                )
-            }
+                    }
+                }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -186,48 +144,11 @@ fun VoiceAgentCreationSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Examples pill
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = SurfaceCardDark,
-                border = BorderStroke(1.dp, BorderSubtle),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Exemplos do que você pode falar:",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = TextMuted
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "• \"Crie um chef especializado em receitas saudáveis com poucos ingredientes\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPureWhite
-                    )
-                    Text(
-                        text = "• \"Crie um mentor de negócios focado em startups\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPureWhite
-                    )
-                }
-            }
+            ExamplesPill()
 
             if (spokenVoicePrompt.isNotBlank()) {
                 Spacer(modifier = Modifier.height(14.dp))
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = SurfaceGlassHighlight,
-                    border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Você disse: \"$spokenVoicePrompt\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPureWhite,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
+                SpokenPromptDisplay(spokenVoicePrompt = spokenVoicePrompt)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -256,101 +177,29 @@ fun VoiceAgentCreationSheet(
             }
 
             AnimatedVisibility(visible = showManualForm) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = manualName,
-                        onValueChange = { manualName = it },
-                        label = { Text("Nome do Agente (ex: Leonardo)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
-                            unfocusedBorderColor = BorderSubtle,
-                            focusedTextColor = TextPureWhite,
-                            unfocusedTextColor = TextPureWhite
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = manualDesc,
-                        onValueChange = { manualDesc = it },
-                        label = { Text("Breve Descrição") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
-                            unfocusedBorderColor = BorderSubtle,
-                            focusedTextColor = TextPureWhite,
-                            unfocusedTextColor = TextPureWhite
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = manualPrompt,
-                        onValueChange = { manualPrompt = it },
-                        label = { Text("Instrução do Sistema (Personalidade)") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
-                            unfocusedBorderColor = BorderSubtle,
-                            focusedTextColor = TextPureWhite,
-                            unfocusedTextColor = TextPureWhite
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = manualEmoji,
-                        onValueChange = { manualEmoji = it },
-                        label = { Text("Emoji Avatar (ex: 🚀)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
-                            unfocusedBorderColor = BorderSubtle,
-                            focusedTextColor = TextPureWhite,
-                            unfocusedTextColor = TextPureWhite
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            if (manualName.isNotBlank() && manualPrompt.isNotBlank()) {
-                                viewModel.createNewAgent(
-                                    manualName,
-                                    manualDesc.ifBlank { "Assistente IA" },
-                                    manualPrompt,
-                                    manualEmoji.ifBlank { "🤖" },
-                                    "Manual"
-                                )
-                                onDismiss()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                        enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
-                    ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Criar e Iniciar Conversa",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                ManualAgentForm(
+                    manualName = manualName,
+                    onManualNameChange = { manualName = it },
+                    manualDesc = manualDesc,
+                    onManualDescChange = { manualDesc = it },
+                    manualPrompt = manualPrompt,
+                    onManualPromptChange = { manualPrompt = it },
+                    manualEmoji = manualEmoji,
+                    onManualEmojiChange = { manualEmoji = it },
+                    isLoading = isLoading,
+                    onSubmit = {
+                        if (manualName.isNotBlank() && manualPrompt.isNotBlank()) {
+                            viewModel.createNewAgent(
+                                manualName,
+                                manualDesc.ifBlank { "Assistente IA" },
+                                manualPrompt,
+                                manualEmoji.ifBlank { "🤖" },
+                                "Manual"
+                            )
+                            onDismiss()
+                        }
                     }
-                }
+                )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -388,5 +237,211 @@ private fun startVoiceCreationSpeech(context: Context, speechRecognizer: SpeechR
         speechRecognizer.startListening(intent)
     } catch (e: Exception) {
         onResult("")
+    }
+}
+
+@Composable
+fun SheetHeader(onDismiss: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Criar Agente por Voz",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPureWhite
+            )
+            Text(
+                text = "Diga como quer que seu novo assistente seja",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMuted
+            )
+        }
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .size(36.dp)
+                .background(SurfaceGlass, CircleShape)
+        ) {
+            Icon(imageVector = Icons.Default.Close, contentDescription = "Fechar", tint = TextMuted)
+        }
+    }
+}
+
+@Composable
+fun VoiceRecordingButton(
+    isListening: Boolean,
+    onToggleListening: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(110.dp)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = if (isListening) listOf(VividMagenta, ElectricViolet)
+                    else listOf(NeonCyan, NeonBlue)
+                ),
+                shape = CircleShape
+            )
+            .clickable {
+                onToggleListening()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
+            contentDescription = "Falar ideia do agente",
+            tint = Color.White,
+            modifier = Modifier.size(52.dp)
+        )
+    }
+}
+
+@Composable
+fun ExamplesPill() {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = SurfaceCardDark,
+        border = BorderStroke(1.dp, BorderSubtle),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = "Exemplos do que você pode falar:",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextMuted
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "• \"Crie um chef especializado em receitas saudáveis com poucos ingredientes\"",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextPureWhite
+            )
+            Text(
+                text = "• \"Crie um mentor de negócios focado em startups\"",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextPureWhite
+            )
+        }
+    }
+}
+
+@Composable
+fun SpokenPromptDisplay(spokenVoicePrompt: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = SurfaceGlassHighlight,
+        border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "Você disse: \"$spokenVoicePrompt\"",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextPureWhite,
+            modifier = Modifier.padding(12.dp)
+        )
+    }
+}
+
+@Composable
+fun ManualAgentForm(
+    manualName: String,
+    onManualNameChange: (String) -> Unit,
+    manualDesc: String,
+    onManualDescChange: (String) -> Unit,
+    manualPrompt: String,
+    onManualPromptChange: (String) -> Unit,
+    manualEmoji: String,
+    onManualEmojiChange: (String) -> Unit,
+    isLoading: Boolean,
+    onSubmit: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+    ) {
+        OutlinedTextField(
+            value = manualName,
+            onValueChange = onManualNameChange,
+            label = { Text("Nome do Agente (ex: Leonardo)") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPureWhite,
+                unfocusedTextColor = TextPureWhite
+            )
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedTextField(
+            value = manualDesc,
+            onValueChange = onManualDescChange,
+            label = { Text("Breve Descrição") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPureWhite,
+                unfocusedTextColor = TextPureWhite
+            )
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedTextField(
+            value = manualPrompt,
+            onValueChange = onManualPromptChange,
+            label = { Text("Instrução do Sistema (Personalidade)") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPureWhite,
+                unfocusedTextColor = TextPureWhite
+            )
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedTextField(
+            value = manualEmoji,
+            onValueChange = onManualEmojiChange,
+            label = { Text("Emoji Avatar (ex: 🚀)") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPureWhite,
+                unfocusedTextColor = TextPureWhite
+            )
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onSubmit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
+            enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
+        ) {
+            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Criar e Iniciar Conversa",
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        }
     }
 }

@@ -1,0 +1,7 @@
+🎯 **What:** The `VoiceAgentCreationSheet` composable was extremely long and handled too many concerns (header, voice recording button, examples pill, spoken prompt display, and a manual input form).
+
+💡 **Why:** By extracting these UI components into their own smaller, single-purpose composable functions (`SheetHeader`, `VoiceRecordingButton`, `ExamplesPill`, `SpokenPromptDisplay`, and `ManualAgentForm`), the code becomes much more readable, modular, and maintainable.
+
+✅ **Verification:** I ran `./gradlew assembleDebug` and `./gradlew test` to ensure that the code compiles successfully and that no existing functionality was broken by the refactoring.
+
+✨ **Result:** The `VoiceAgentCreationSheet` is now significantly shorter and easier to understand, with clear separation of UI components.
