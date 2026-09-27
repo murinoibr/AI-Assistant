@@ -658,6 +658,59 @@ private fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        AgentsListSection(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            agents = agents,
+            selectedAgent = selectedAgent,
+            onSelectAgent = onSelectAgent,
+            onDeleteAgent = onDeleteAgent
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        OpenAiApiKeySection(
+            tempOpenAiKey = tempOpenAiKey,
+            onKeyChange = { tempOpenAiKey = it },
+            onSaveKey = { onSaveOpenAiApiKey(tempOpenAiKey) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        SecurityAndComplianceSection(
+            onShowPrivacyPolicy = { showPrivacyDialog = true },
+            onShowClearHistory = { showClearConfirmDialog = true }
+        )
+    }
+
+    if (showPrivacyDialog) {
+        PrivacyPolicyDialog(
+            onDismiss = { showPrivacyDialog = false }
+        )
+    }
+
+    if (showClearConfirmDialog) {
+        ClearHistoryConfirmDialog(
+            onDismiss = { showClearConfirmDialog = false },
+            onConfirm = {
+                onClearCurrentHistory()
+                showClearConfirmDialog = false
+            }
+        )
+    }
+}
+
+
+@Composable
+private fun AgentsListSection(
+    modifier: Modifier = Modifier,
+    agents: List<AgentEntity>,
+    selectedAgent: AgentEntity?,
+    onSelectAgent: (AgentEntity) -> Unit,
+    onDeleteAgent: (Long) -> Unit
+) {
+    Column(modifier = modifier) {
         Text(
             text = "AGENTES DISPONÍVEIS:",
             color = Color(0xFF94A3B8),
@@ -730,229 +783,236 @@ private fun SettingsScreen(
                 }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(10.dp))
 
-        // OpenAI API Key Section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0C101A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
-                .padding(12.dp)
+@Composable
+private fun OpenAiApiKeySection(
+    tempOpenAiKey: String,
+    onKeyChange: (String) -> Unit,
+    onSaveKey: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF0C101A))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .padding(12.dp)
+    ) {
+        Text(
+            text = "CONFIGURAR OPENAI API KEY (GPT-4o-mini)",
+            color = Color(0xFF00E5FF),
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = tempOpenAiKey,
+            onValueChange = onKeyChange,
+            placeholder = { Text("sk-...", color = Color(0xFF64748B), fontSize = 12.sp) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color(0xFF00E5FF),
+                unfocusedBorderColor = Color(0xFF1E293B),
+                focusedContainerColor = Color(0xFF141F32),
+                unfocusedContainerColor = Color(0xFF141F32)
+            ),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onSaveKey,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+            shape = RoundedCornerShape(10.dp)
         ) {
-            Text(
-                text = "CONFIGURAR OPENAI API KEY (GPT-4o-mini)",
-                color = Color(0xFF00E5FF),
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = tempOpenAiKey,
-                onValueChange = { tempOpenAiKey = it },
-                placeholder = { Text("sk-...", color = Color(0xFF64748B), fontSize = 12.sp) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color(0xFF00E5FF),
-                    unfocusedBorderColor = Color(0xFF1E293B),
-                    focusedContainerColor = Color(0xFF141F32),
-                    unfocusedContainerColor = Color(0xFF141F32)
-                ),
-                shape = RoundedCornerShape(10.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { onSaveOpenAiApiKey(tempOpenAiKey) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("SALVAR OPENAI API KEY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Privacy Policy & Google Play Data Safety Section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0C101A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
-                .padding(12.dp)
-        ) {
-            Text(
-                text = "SEGURANÇA E CONFORMIDADE (GOOGLE PLAY)",
-                color = Color(0xFF00E5FF),
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Shield,
-                        contentDescription = null,
-                        tint = Color(0xFF00E5FF),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Política de Privacidade e Dados",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = Color(0xFF64748B),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 6.dp),
-                color = Color(0xFF1E293B)
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = null,
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Limpar Histórico de Mensagens",
-                        color = Color(0xFFFCA5A5),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = Color(0xFF64748B),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "AI Assistant v1.0.0 (Build 1) • Target SDK 36 (Android 15+) • Google Play Ready",
-                color = Color(0xFF64748B),
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Text("SALVAR OPENAI API KEY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
     }
+}
 
-    // Privacy Policy Dialog (MANDATORY FOR GOOGLE PLAY STORE AUDIO PERMISSIONS)
-    if (showPrivacyDialog) {
-        AlertDialog(
-            onDismissRequest = { showPrivacyDialog = false },
-            containerColor = Color(0xFF0F172A),
-            title = {
+
+@Composable
+private fun SecurityAndComplianceSection(
+    onShowPrivacyPolicy: () -> Unit,
+    onShowClearHistory: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF0C101A))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .padding(12.dp)
+    ) {
+        Text(
+            text = "SEGURANÇA E CONFORMIDADE (GOOGLE PLAY)",
+            color = Color(0xFF00E5FF),
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onShowPrivacyPolicy)
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = null,
+                    tint = Color(0xFF00E5FF),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Política de Privacidade",
+                    text = "Política de Privacidade e Dados",
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
                 )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "1. Uso do Microfone (RECORD_AUDIO):\n" +
-                                "O aplicativo solicita acesso ao microfone exclusivamente para converter sua fala em texto em tempo real.\n\n" +
-                                "2. Tratamento de Dados de Voz:\n" +
-                                "O áudio é processado de maneira efêmera e não é armazenado em servidores externos nem comercializado com terceiros.\n\n" +
-                                "3. Armazenamento Local:\n" +
-                                "As conversas e os agentes criados ficam salvos exclusivamente no banco de dados local do seu dispositivo (Room Database) e podem ser apagados por você a qualquer momento.\n\n" +
-                                "4. Inteligência Artificial:\n" +
-                                "As respostas são geradas via API do Google Gemini através de conexões HTTPS criptografadas.",
-                        color = Color(0xFFCBD5E1),
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showPrivacyDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
-                ) {
-                    Text("ENTENDI", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
             }
-        )
-    }
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF64748B),
+                modifier = Modifier.size(18.dp)
+            )
+        }
 
-    // Clear History Confirmation Dialog
-    if (showClearConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showClearConfirmDialog = false },
-            containerColor = Color(0xFF0F172A),
-            title = {
-                Text("Limpar Mensagens", color = Color.White, fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Text(
-                    "Deseja realmente apagar o histórico de mensagens do agente atual? Essa ação não pode ser desfeita.",
-                    color = Color(0xFFCBD5E1),
-                    fontSize = 13.sp
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 6.dp),
+            color = Color(0xFF1E293B)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onShowClearHistory)
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.DeleteSweep,
+                    contentDescription = null,
+                    tint = Color(0xFFEF4444),
+                    modifier = Modifier.size(18.dp)
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onClearCurrentHistory()
-                        showClearConfirmDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
-                ) {
-                    Text("LIMPAR", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearConfirmDialog = false }) {
-                    Text("CANCELAR", color = Color(0xFF94A3B8))
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Limpar Histórico de Mensagens",
+                    color = Color(0xFFFCA5A5),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF64748B),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "AI Assistant v1.0.0 (Build 1) • Target SDK 36 (Android 15+) • Google Play Ready",
+            color = Color(0xFF64748B),
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
+}
+
+
+@Composable
+private fun PrivacyPolicyDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF0F172A),
+        title = {
+            Text(
+                text = "Política de Privacidade",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "1. Uso do Microfone (RECORD_AUDIO):\n" +
+                            "O aplicativo solicita acesso ao microfone exclusivamente para converter sua fala em texto em tempo real.\n\n" +
+                            "2. Tratamento de Dados de Voz:\n" +
+                            "O áudio é processado de maneira efêmera e não é armazenado em servidores externos nem comercializado com terceiros.\n\n" +
+                            "3. Armazenamento Local:\n" +
+                            "As conversas e os agentes criados ficam salvos exclusivamente no banco de dados local do seu dispositivo (Room Database) e podem ser apagados por você a qualquer momento.\n\n" +
+                            "4. Inteligência Artificial:\n" +
+                            "As respostas são geradas via API do Google Gemini através de conexões HTTPS criptografadas.",
+                    color = Color(0xFFCBD5E1),
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+            ) {
+                Text("ENTENDI", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+@Composable
+private fun ClearHistoryConfirmDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF0F172A),
+        title = {
+            Text("Limpar Mensagens", color = Color.White, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text(
+                "Deseja realmente apagar o histórico de mensagens do agente atual? Essa ação não pode ser desfeita.",
+                color = Color(0xFFCBD5E1),
+                fontSize = 13.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+            ) {
+                Text("LIMPAR", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CANCELAR", color = Color(0xFF94A3B8))
+            }
+        }
+    )
 }
