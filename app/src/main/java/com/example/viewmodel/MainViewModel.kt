@@ -109,7 +109,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
         } catch (e: Exception) {
             null
         }
-        return configKey ?: "AQ.Ab8RN6JiI5KmEyEingef2-ttIi7buawByh9aEhKjrl_pJT-IUg"
+        return configKey ?: ""
     }
 
     private fun getOpenCodeApiKey(): String {
@@ -119,7 +119,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
         } catch (e: Exception) {
             null
         }
-        return key ?: "oc_sk_132e769f4a78_Qsp7flsrtBCdDQQsnCGJb5wpToOznP_T"
+        return key ?: ""
     }
 
     private val _openAiApiKey = MutableStateFlow(getApiKey())
