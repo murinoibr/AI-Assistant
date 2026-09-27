@@ -11,10 +11,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.ElectricViolet
-import com.example.ui.theme.NeonBlue
-import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.VividMagenta
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.pow
