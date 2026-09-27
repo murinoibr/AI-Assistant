@@ -1,0 +1,6 @@
+{
+  "name": "AI Assistant",
+  "description": "Aplicativo minimalista para conversar e criar agentes de IA por voz em portugues.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
