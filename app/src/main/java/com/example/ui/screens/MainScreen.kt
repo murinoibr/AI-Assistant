@@ -128,7 +128,15 @@ fun MainScreen(viewModel: MainViewModel) {
             viewModel.setListening(false)
             audioLevel = 0f
         } else {
-            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            val permissionCheck = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            )
+            if (permissionCheck == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                startListeningAction()
+            } else {
+                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
         }
     }
 

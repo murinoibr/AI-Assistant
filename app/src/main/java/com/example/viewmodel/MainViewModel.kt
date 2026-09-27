@@ -122,6 +122,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
         return key ?: "oc_sk_132e769f4a78_Qsp7flsrtBCdDQQsnCGJb5wpToOznP_T"
     }
 
+    private val _openAiApiKey = MutableStateFlow(getApiKey())
+    val openAiApiKey: StateFlow<String> = _openAiApiKey
+
+    fun saveOpenAiApiKey(key: String) {
+        _openAiApiKey.value = key
+    }
+
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             val result = tts?.setLanguage(Locale.forLanguageTag("pt-BR"))

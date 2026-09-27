@@ -246,16 +246,22 @@ fun VoiceChatScreen(
                             viewModel.setListening(false)
                             speechRecognizer?.stopListening()
                         } else {
-                            viewModel.setListening(true)
-                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            if (speechRecognizer != null) {
-                                startListening(context, speechRecognizer, viewModel)
+                            val permissionCheck = androidx.core.content.ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.RECORD_AUDIO
+                            )
+                            if (permissionCheck == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                viewModel.setListening(true)
+                                if (speechRecognizer != null) {
+                                    startListening(context, speechRecognizer, viewModel)
+                                } else {
+                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                        viewModel.setListening(false)
+                                        viewModel.sendMessage("Olá! Como você pode me ajudar hoje?")
+                                    }, 2000L)
+                                }
                             } else {
-                                // Fallback simulation if speech recognition not available
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                    viewModel.setListening(false)
-                                    viewModel.sendMessage("Olá! Como você pode me ajudar hoje?")
-                                }, 2000L)
+                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                             }
                         }
                     },
