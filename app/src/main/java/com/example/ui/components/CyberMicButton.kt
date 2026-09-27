@@ -26,13 +26,15 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Concentric Rainbow Ring Mic Button from the reference design.
- * Features 360-degree rainbow neon sweep border, dark inner core, and gradient mic icon.
+ * Features 360-degree rainbow neon sweep border, dark inner core, and gradient mic icon,
+ * with real-time reaction to the user's voice input level (RMSdB).
  */
 @Composable
 fun CyberMicButton(
     isListening: Boolean,
     isSpeaking: Boolean,
     isLoading: Boolean,
+    audioLevel: Float = 0f,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -44,7 +46,7 @@ fun CyberMicButton(
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 2500 else if (isLoading) 1200 else 8000,
+                durationMillis = if (isListening) 2200 else if (isLoading) 1200 else 8000,
                 easing = LinearEasing
             ),
             repeatMode = RepeatMode.Restart
@@ -52,13 +54,23 @@ fun CyberMicButton(
         label = "rainbowRotation"
     )
 
+    // Dynamic voice response with spring physics
+    val animatedVoiceLevel by animateFloatAsState(
+        targetValue = if (isListening) audioLevel.coerceIn(0f, 1f) else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.58f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "animatedVoiceLevel"
+    )
+
     // Pulse scale for shockwave aura
     val auraScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isListening || isSpeaking) 1.28f else 1.05f,
+        targetValue = if (isListening || isSpeaking) 1.25f else 1.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 800 else if (isSpeaking) 600 else 2400,
+                durationMillis = if (isListening) 750 else if (isSpeaking) 600 else 2400,
                 easing = FastOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
@@ -71,7 +83,7 @@ fun CyberMicButton(
         targetValue = 0.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 800 else if (isSpeaking) 600 else 2400,
+                durationMillis = if (isListening) 750 else if (isSpeaking) 600 else 2400,
                 easing = FastOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
@@ -94,25 +106,30 @@ fun CyberMicButton(
             .size(136.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Outer pulsing shockwave rings
+        // Outer pulsing shockwave rings that expand with voice input level
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val baseRadius = size.width * 0.46f
+            val baseRadius = size.width * 0.44f
+
+            // Dynamic voice flare multiplier
+            val voiceExpansion = 1f + (animatedVoiceLevel * 0.35f)
+            val totalScale = auraScale * voiceExpansion
+            val combinedAlpha = (auraAlpha + animatedVoiceLevel * 0.4f).coerceIn(0f, 0.8f)
 
             // Outer subtle glow halo
             drawCircle(
-                color = Color(0xFF00E5FF).copy(alpha = auraAlpha * 0.5f),
-                radius = baseRadius * auraScale * 1.15f,
+                color = Color(0xFF00E5FF).copy(alpha = combinedAlpha * 0.5f),
+                radius = baseRadius * totalScale * 1.18f,
                 center = center
             )
             drawCircle(
-                color = Color(0xFFFF2A85).copy(alpha = auraAlpha * 0.35f),
-                radius = baseRadius * auraScale,
+                color = Color(0xFFFF2A85).copy(alpha = combinedAlpha * 0.45f),
+                radius = baseRadius * totalScale,
                 center = center
             )
         }
 
-        // The rainbow outer ring
+        // The rainbow outer ring with glow
         Canvas(
             modifier = Modifier
                 .size(118.dp)
@@ -120,39 +137,43 @@ fun CyberMicButton(
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = (size.width / 2f) - 4.dp.toPx()
 
+            // Dynamic ring thickness with audio level
+            val extraStroke = (animatedVoiceLevel * 3.dp.toPx())
+
             // Draw glowing outer blur ring
             drawCircle(
                 brush = Brush.sweepGradient(rainbowColors, center = center),
                 radius = radius,
-                style = Stroke(width = 6.dp.toPx()),
-                alpha = 0.4f
+                style = Stroke(width = 6.dp.toPx() + extraStroke),
+                alpha = (0.4f + animatedVoiceLevel * 0.5f).coerceIn(0f, 0.9f)
             )
 
             // Draw crisp rainbow ring
             drawCircle(
                 brush = Brush.sweepGradient(rainbowColors, center = center),
                 radius = radius,
-                style = Stroke(width = 3.5.dp.toPx())
+                style = Stroke(width = 3.5.dp.toPx() + extraStroke * 0.5f)
             )
         }
 
-        // Inner dark button core
+        // Inner dark button core with subtle scaling on loud audio
         Box(
             modifier = Modifier
                 .size(86.dp)
+                .scale(1f + (animatedVoiceLevel * 0.08f))
                 .shadow(
-                    elevation = 16.dp,
+                    elevation = (16 + (animatedVoiceLevel * 14)).dp,
                     shape = CircleShape,
-                    spotColor = Color(0xFF00E5FF)
+                    spotColor = if (isListening) Color(0xFFFF2A85) else Color(0xFF00E5FF)
                 )
                 .clip(CircleShape)
                 .background(Color(0xFF0C101A))
                 .border(
-                    width = 1.5.dp,
+                    width = (1.5 + (animatedVoiceLevel * 1.5)).dp,
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF00E5FF).copy(alpha = 0.8f),
-                            Color(0xFFFF2A85).copy(alpha = 0.8f)
+                            Color(0xFF00E5FF).copy(alpha = 0.85f),
+                            Color(0xFFFF2A85).copy(alpha = 0.85f)
                         )
                     ),
                     shape = CircleShape
@@ -170,7 +191,7 @@ fun CyberMicButton(
                 contentDescription = if (isListening) "Parar de Ouvir" else "Falar",
                 modifier = Modifier
                     .size(42.dp)
-                    .scale(if (isListening) 1.1f else 1f),
+                    .scale(if (isListening) (1.1f + animatedVoiceLevel * 0.12f) else 1f),
                 tint = if (isListening) Color(0xFFFF2A85) else Color(0xFF00E5FF)
             )
         }

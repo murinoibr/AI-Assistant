@@ -23,6 +23,10 @@ class AgentRepository(
         messageDao.insertMessage(MessageEntity(agentId = agentId, sender = sender, text = text))
     }
 
+    suspend fun clearMessages(agentId: Long) {
+        messageDao.clearMessages(agentId)
+    }
+
     suspend fun seedDefaultAgents() {
         // We can check if agents exist or insert defaults if empty
     }

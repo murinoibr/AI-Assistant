@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit
 @JsonClass(generateAdapter = true)
 data class GenerateContentRequest(
     val contents: List<Content>,
-    @Json(name = "generationConfig") val generationConfig: GenerationConfig? = null,
-    @Json(name = "systemInstruction") val systemInstruction: Content? = null
+    @param:Json(name = "generationConfig") val generationConfig: GenerationConfig? = null,
+    @param:Json(name = "systemInstruction") val systemInstruction: Content? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -55,7 +55,7 @@ data class AgentJson(
 )
 
 interface GeminiApiService {
-    @POST("v1beta/models/gemini-3.5-flash:generateContent")
+    @POST("v1beta/models/gemini-3.8-flash:generateContent")
     suspend fun generateContent(
         @Query("key") apiKey: String,
         @Body request: GenerateContentRequest

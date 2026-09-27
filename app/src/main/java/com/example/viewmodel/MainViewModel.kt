@@ -46,6 +46,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
                 if (list.isEmpty()) {
                     repository.insertAgent(
                         AgentEntity(
+                            name = "OpenCode",
+                            description = "Especialista em engenharia de software e programação",
+                            systemPrompt = "Você é o OpenCode, um assistente de inteligência artificial especialista em desenvolvimento de software, arquitetura de sistemas, programação em Kotlin/Compose e depuração de código. Seja técnico, preciso e forneça código limpo.",
+                            emoji = "💻",
+                            category = "Desenvolvimento",
+                            isCustom = false
+                        )
+                    )
+                    repository.insertAgent(
+                        AgentEntity(
                             name = "PROJECT ALPHA",
                             description = "Agente conversacional de alta performance e baixa latência",
                             systemPrompt = "Você é o PROJECT ALPHA, um agente conversacional avançado de inteligência artificial em português. Você responde com inteligência, precisão, naturalidade e clareza.",
@@ -93,17 +103,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
     }
 
     private fun getApiKey(): String {
-        return try {
+        val configKey = try {
             val field = com.example.BuildConfig::class.java.getField("GEMINI_API_KEY")
-            field.get(null) as? String ?: ""
+            (field.get(null) as? String)?.takeIf { it.isNotBlank() && it != "MY_GEMINI_API_KEY" }
         } catch (e: Exception) {
-            ""
+            null
         }
+        return configKey ?: "AQ.Ab8RN6JiI5KmEyEingef2-ttIi7buawByh9aEhKjrl_pJT-IUg"
+    }
+
+    private fun getOpenCodeApiKey(): String {
+        val key = try {
+            val field = com.example.BuildConfig::class.java.getField("OPENCODE_API_KEY")
+            (field.get(null) as? String)?.takeIf { it.isNotBlank() && it != "MY_OPENCODE_API_KEY" }
+        } catch (e: Exception) {
+            null
+        }
+        return key ?: "oc_sk_132e769f4a78_Qsp7flsrtBCdDQQsnCGJb5wpToOznP_T"
     }
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val result = tts?.setLanguage(Locale("pt", "BR"))
+            val result = tts?.setLanguage(Locale.forLanguageTag("pt-BR"))
             isTtsInitialized = (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED)
         }
     }
@@ -138,30 +159,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
             _isLoading.value = true
 
             try {
-                val apiKey = getApiKey()
-                val chatHistory = _messages.value.takeLast(10).map { msg ->
-                    Content(parts = listOf(Part(text = "${msg.sender}: ${msg.text}")))
-                }.toMutableList()
+                var reply: String? = null
+                if (agent.name.equals("OpenCode", ignoreCase = true)) {
+                    try {
+                        val ocKey = getOpenCodeApiKey()
+                        val messagesList = mutableListOf<OpenCodeMessage>()
+                        messagesList.add(OpenCodeMessage(role = "system", content = agent.systemPrompt))
+                        for (msg in _messages.value.takeLast(10)) {
+                            val role = if (msg.sender == "user") "user" else "assistant"
+                            messagesList.add(OpenCodeMessage(role = role, content = msg.text))
+                        }
+                        messagesList.add(OpenCodeMessage(role = "user", content = text))
 
-                chatHistory.add(Content(parts = listOf(Part(text = "user: $text"))))
-
-                val request = GenerateContentRequest(
-                    contents = chatHistory,
-                    systemInstruction = Content(parts = listOf(Part(text = agent.systemPrompt))),
-                    generationConfig = GenerationConfig(temperature = 0.7f)
-                )
-
-                if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-                    val reply = "Olá! Para conversar com inteligência artificial real, configure sua chave GEMINI_API_KEY no painel de Segredos do AI Studio. (Mensagem simulada: Recebi sua mensagem '$text')"
-                    repository.saveMessage(agent.id, "agent", reply)
-                    speak(reply)
-                } else {
-                    val response = GeminiClient.service.generateContent(apiKey, request)
-                    val reply = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                        ?: "Desculpe, não consegui processar sua resposta."
-                    repository.saveMessage(agent.id, "agent", reply)
-                    speak(reply)
+                        val ocReq = OpenCodeChatRequest(
+                            model = "deepseek-v4.1-flash",
+                            messages = messagesList
+                        )
+                        val ocResp = OpenCodeClient.service.chatCompletions("Bearer $ocKey", ocReq)
+                        reply = ocResp.choices?.firstOrNull()?.message?.content
+                    } catch (e: Exception) {
+                        reply = null
+                    }
                 }
+
+                if (reply.isNullOrBlank()) {
+                    val apiKey = getApiKey()
+                    val chatHistory = _messages.value.takeLast(10).map { msg ->
+                        Content(parts = listOf(Part(text = "${msg.sender}: ${msg.text}")))
+                    }.toMutableList()
+
+                    chatHistory.add(Content(parts = listOf(Part(text = "user: $text"))))
+
+                    val request = GenerateContentRequest(
+                        contents = chatHistory,
+                        systemInstruction = Content(parts = listOf(Part(text = agent.systemPrompt))),
+                        generationConfig = GenerationConfig(temperature = 0.7f)
+                    )
+
+                    if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+                        reply = "Olá! Para conversar com inteligência artificial real, configure sua chave no AI Studio. (Mensagem simulada: Recebi sua mensagem '$text')"
+                    } else {
+                        val response = GeminiClient.service.generateContent(apiKey, request)
+                        reply = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                            ?: "Desculpe, não consegui processar sua resposta."
+                    }
+                }
+
+                repository.saveMessage(agent.id, "agent", reply)
+                speak(reply)
             } catch (e: Exception) {
                 val errorMsg = "Erro de conexão: ${e.localizedMessage ?: "Verifique sua internet."}"
                 repository.saveMessage(agent.id, "agent", errorMsg)
@@ -286,6 +331,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
                 _isLoading.value = false
                 onFinished()
             }
+        }
+    }
+
+    fun clearCurrentAgentMessages() {
+        val agent = _selectedAgent.value ?: return
+        viewModelScope.launch {
+            repository.clearMessages(agent.id)
+            _messages.value = emptyList()
         }
     }
 
