@@ -5,10 +5,9 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <include domain="database" path="."/>
+        <include domain="sharedpref" path="."/>
+        <exclude domain="database" path="vozia_database-journal"/>
     </cloud-backup>
     <!--
     <device-transfer>
