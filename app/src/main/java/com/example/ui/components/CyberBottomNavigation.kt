@@ -9,7 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -69,8 +69,8 @@ fun CyberBottomNavigation(
             )
 
             CyberNavItem(
-                icon = Icons.Default.ChatBubbleOutline,
-                label = "Interaction",
+                icon = Icons.Default.AddCircleOutline,
+                label = "Criar Agente",
                 isSelected = selectedTab == 1,
                 rainbowBrush = rainbowBrush,
                 onClick = { onTabSelected(1) }

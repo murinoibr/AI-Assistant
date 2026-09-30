@@ -10,6 +10,7 @@ import android.speech.SpeechRecognizer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,13 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -57,95 +59,34 @@ fun MainScreen(viewModel: MainViewModel) {
     var currentTab by remember { mutableIntStateOf(0) } // 0: Home, 1: Interaction, 2: Settings
     var showAgentSelectorSheet by remember { mutableStateOf(false) }
     var showVoiceCreateSheet by remember { mutableStateOf(false) }
+    var showMicrophoneDisclosureDialog by remember { mutableStateOf(false) }
 
-    // Speech Recognizer setup
-    var speechRecognizer by remember { mutableStateOf<SpeechRecognizer?>(null) }
-    var recognizedText by remember { mutableStateOf("") }
-    var audioLevel by remember { mutableFloatStateOf(0f) }
-
-    val startListeningAction: () -> Unit = {
-        if (SpeechRecognizer.isRecognitionAvailable(context)) {
-            val recognizer = speechRecognizer ?: SpeechRecognizer.createSpeechRecognizer(context).also {
-                speechRecognizer = it
-            }
-
-            recognizer.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) {
-                    viewModel.setListening(true)
-                    audioLevel = 0.15f
-                }
-                override fun onBeginningOfSpeech() {
-                    audioLevel = 0.3f
-                }
-                override fun onRmsChanged(rmsdB: Float) {
-                    // Normalize SpeechRecognizer rmsdB (-2dB to 10dB+) to 0.05..1.0
-                    val normalized = ((rmsdB + 2f) / 12f).coerceIn(0.08f, 1f)
-                    audioLevel = normalized
-                }
-                override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {
-                    viewModel.setListening(false)
-                    audioLevel = 0f
-                }
-                override fun onError(error: Int) {
-                    viewModel.setListening(false)
-                    audioLevel = 0f
-                }
-                override fun onResults(results: Bundle?) {
-                    viewModel.setListening(false)
-                    audioLevel = 0f
-                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    val text = matches?.firstOrNull() ?: ""
-                    if (text.isNotBlank()) {
-                        recognizedText = text
-                        viewModel.sendMessage(text)
-                    }
-                }
-                override fun onPartialResults(partialResults: Bundle?) {
-                    val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    matches?.firstOrNull()?.let { recognizedText = it }
-                }
-                override fun onEvent(eventType: Int, params: Bundle?) {}
-            })
-
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "pt-BR")
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            }
-            recognizer.startListening(intent)
-        }
-    }
+    val audioLevel by viewModel.audioLevel.collectAsStateWithLifecycle()
+    val vadState by viewModel.vadState.collectAsStateWithLifecycle()
+    val vadMode by viewModel.vadMode.collectAsStateWithLifecycle()
+    val recognizedText by viewModel.lastRecognizedText.collectAsStateWithLifecycle()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            startListeningAction()
+            viewModel.startListeningWithVad()
         }
     }
 
     val toggleVoiceListening: () -> Unit = {
         if (isListening) {
-            speechRecognizer?.stopListening()
-            viewModel.setListening(false)
-            audioLevel = 0f
+            viewModel.stopListeningWithVad()
         } else {
             val permissionCheck = androidx.core.content.ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
             )
             if (permissionCheck == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                startListeningAction()
+                viewModel.startListeningWithVad()
             } else {
-                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                showMicrophoneDisclosureDialog = true
             }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            speechRecognizer?.destroy()
         }
     }
 
@@ -180,6 +121,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         isListening = isListening,
                         isSpeaking = isSpeaking,
                         isLoading = isLoading,
+                        vadState = vadState,
                         audioLevel = audioLevel,
                         lastMessage = messages.lastOrNull(),
                         recognizedText = recognizedText,
@@ -189,21 +131,17 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
                 }
                 1 -> {
-                    // INTERACTION TAB (FULL CHAT & VOICE HISTORY)
-                    InteractionScreen(
-                        messages = messages,
-                        selectedAgent = selectedAgent,
-                        isLoading = isLoading,
-                        isListening = isListening,
-                        audioLevel = audioLevel,
-                        onSendMessage = { viewModel.sendMessage(it) },
-                        onReplayTts = { viewModel.speak(it) },
-                        onMicClick = toggleVoiceListening
+                    // CREATE AGENT TAB (SECOND PAGE)
+                    CreateAgentScreen(
+                        viewModel = viewModel,
+                        isLoading = isLoading
                     )
                 }
                 2 -> {
                     // SETTINGS / AGENT MANAGER TAB
                     val openAiApiKey by viewModel.openAiApiKey.collectAsState()
+                    val speechRate by viewModel.speechRate.collectAsStateWithLifecycle()
+                    val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
                     SettingsScreen(
                         agents = agents,
                         selectedAgent = selectedAgent,
@@ -212,7 +150,17 @@ fun MainScreen(viewModel: MainViewModel) {
                         onDeleteAgent = { viewModel.deleteAgent(it) },
                         onClearCurrentHistory = { viewModel.clearCurrentAgentMessages() },
                         openAiApiKey = openAiApiKey,
-                        onSaveOpenAiApiKey = { viewModel.saveOpenAiApiKey(it) }
+                        onSaveOpenAiApiKey = { viewModel.saveOpenAiApiKey(it) },
+                        speechRate = speechRate,
+                        onSetSpeechRate = { viewModel.setSpeechRate(it) },
+                        currentLanguage = currentLanguage,
+                        onSetLanguage = { viewModel.setLanguage(it) },
+                        onTestTts = {
+                            viewModel.speak("Olá! Esta é a voz sintetizada em português para o seu assistente de inteligência artificial.")
+                        },
+                        vadMode = vadMode,
+                        onSetVadMode = { viewModel.setVadMode(it) },
+                        onTestApiKey = { key, callback -> viewModel.testApiKeyConnection(key, callback) }
                     )
                 }
             }
@@ -241,6 +189,59 @@ fun MainScreen(viewModel: MainViewModel) {
             onDismiss = { showVoiceCreateSheet = false }
         )
     }
+
+    // Prominent Microphone Disclosure Dialog (MANDATORY GOOGLE PLAY DATA SAFETY REQUIREMENT)
+    if (showMicrophoneDisclosureDialog) {
+        AlertDialog(
+            onDismissRequest = { showMicrophoneDisclosureDialog = false },
+            containerColor = Color(0xFF0F172A),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = Color(0xFF00E5FF),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Acesso ao Microfone",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Para que você possa conversar com os agentes de inteligência artificial por voz, o aplicativo precisa de permissão para utilizar o microfone do seu dispositivo.\n\n" +
+                               "• O áudio é convertido em texto em tempo real (VAD) para envio à IA.\n" +
+                               "• Nenhuma gravação de voz é salva permanentemente ou comercializada com terceiros.",
+                        color = Color(0xFFCBD5E1),
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showMicrophoneDisclosureDialog = false
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                ) {
+                    Text("CONCORDAR E CONTINUAR", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMicrophoneDisclosureDialog = false }) {
+                    Text("AGORA NÃO", color = Color(0xFF94A3B8), fontSize = 11.5.sp)
+                }
+            }
+        )
+    }
 }
 
 /**
@@ -252,6 +253,7 @@ private fun HomeHudScreen(
     isListening: Boolean,
     isSpeaking: Boolean,
     isLoading: Boolean,
+    vadState: com.example.voice.VadState = com.example.voice.VadState.IDLE,
     audioLevel: Float = 0f,
     lastMessage: com.example.data.MessageEntity?,
     recognizedText: String,
@@ -294,15 +296,20 @@ private fun HomeHudScreen(
             )
         }
 
-        // Voice Status Text
+        // Voice Status Text with intelligent VAD awareness
         val statusText = when {
-            isListening -> "OUVINDO SUA VOZ..."
-            isLoading -> "PROCESSANDO RESPOSTA NO GEMINI..."
-            isSpeaking -> "FALANDO EM VOZ ALTA..."
-            else -> "TOQUE PARA CONVERSAR"
+            isListening && vadState == com.example.voice.VadState.USER_SPEAKING -> "FALA DETECTADA • RECONHECENDO EM PORTUGUÊS..."
+            isListening && (vadState == com.example.voice.VadState.SILENCE_AFTER_SPEECH || vadState == com.example.voice.VadState.FINALIZING) -> "COMANDO CONCLUÍDO • PROCESSANDO..."
+            isListening && vadState == com.example.voice.VadState.CALIBRATING_NOISE_FLOOR -> "CALIBRANDO MICROFONE..."
+            isListening -> "OUVINDO... (FALE SEU COMANDO EM PORTUGUÊS)"
+            isLoading -> "IA PROCESSANDO COMANDO DE VOZ..."
+            isSpeaking -> "FALANDO EM VOZ ALTA (PT-BR)..."
+            else -> "TOQUE PARA FALAR EM PORTUGUÊS"
         }
 
         val statusColor = when {
+            isListening && (vadState == com.example.voice.VadState.SILENCE_AFTER_SPEECH || vadState == com.example.voice.VadState.FINALIZING) -> Color(0xFF00E5FF)
+            isListening && vadState == com.example.voice.VadState.USER_SPEAKING -> Color(0xFF10B981)
             isListening -> Color(0xFFFF2A85)
             isLoading -> Color(0xFFFFEA00)
             isSpeaking -> Color(0xFF00E5FF)
@@ -316,6 +323,23 @@ private fun HomeHudScreen(
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.2.sp
         )
+
+        if (isListening && recognizedText.isNotBlank()) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1E293B).copy(alpha = 0.85f),
+                modifier = Modifier.padding(top = 4.dp)
+            ) {
+                Text(
+                    text = "\"$recognizedText\"",
+                    color = Color(0xFF00E5FF),
+                    fontSize = 11.5.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -388,7 +412,7 @@ private fun HomeHudScreen(
                             modifier = Modifier.size(28.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.VolumeUp,
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Ouvir",
                                 tint = Color(0xFF00E5FF),
                                 modifier = Modifier.size(18.dp)
@@ -420,6 +444,7 @@ private fun InteractionScreen(
     selectedAgent: AgentEntity?,
     isLoading: Boolean,
     isListening: Boolean,
+    isSpeaking: Boolean = false,
     audioLevel: Float = 0f,
     onSendMessage: (String) -> Unit,
     onReplayTts: (String) -> Unit,
@@ -427,6 +452,38 @@ private fun InteractionScreen(
 ) {
     var textInput by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "interactionMicPulse")
+    val micPulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = when {
+            isLoading -> 1.18f
+            isSpeaking -> 1.12f
+            isListening -> 1.15f
+            else -> 1f
+        },
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = if (isLoading) 550 else if (isSpeaking) 750 else 650,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "micScale"
+    )
+
+    val micPulseAlpha by infiniteTransition.animateFloat(
+        initialValue = if (isLoading || isSpeaking || isListening) 0.5f else 0f,
+        targetValue = 0.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = if (isLoading) 550 else if (isSpeaking) 750 else 650,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "micAlpha"
+    )
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -503,7 +560,7 @@ private fun InteractionScreen(
 
                                 if (!isUser) {
                                     Icon(
-                                        imageVector = Icons.Default.VolumeUp,
+                                        imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ouvir",
                                         tint = Color(0xFF00E5FF),
                                         modifier = Modifier
@@ -527,7 +584,7 @@ private fun InteractionScreen(
             if (isLoading) {
                 item {
                     Text(
-                        text = "Gemini está gerando a resposta...",
+                        text = "Agente de IA está gerando a resposta...",
                         color = Color(0xFF38BDF8),
                         fontSize = 12.sp,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -604,18 +661,53 @@ private fun InteractionScreen(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            IconButton(
-                onClick = onMicClick,
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(if (isListening) Color(0xFFFF2A85) else Color(0xFF1E293B))
+            val micBgColor = when {
+                isListening -> Color(0xFFFF2A85)
+                isLoading -> Color(0xFFFFEA00)
+                isSpeaking -> Color(0xFF00E5FF)
+                else -> Color(0xFF1E293B)
+            }
+            val micIconColor = when {
+                isListening -> Color.White
+                isLoading -> Color.Black
+                isSpeaking -> Color.Black
+                else -> Color(0xFF00E5FF)
+            }
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(50.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Falar",
-                    tint = if (isListening) Color.White else Color(0xFF00E5FF)
-                )
+                // Pulsing outer ripple shockwave
+                if (isLoading || isSpeaking || isListening) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .scale(micPulseScale * 1.15f)
+                            .clip(CircleShape)
+                            .background(micBgColor.copy(alpha = micPulseAlpha))
+                    )
+                }
+
+                IconButton(
+                    onClick = onMicClick,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .scale(micPulseScale)
+                        .clip(CircleShape)
+                        .background(micBgColor)
+                ) {
+                    Icon(
+                        imageVector = if (isListening) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = when {
+                            isListening -> "Parar de Ouvir"
+                            isLoading -> "IA Processando..."
+                            isSpeaking -> "IA Falando..."
+                            else -> "Falar"
+                        },
+                        tint = micIconColor
+                    )
+                }
             }
         }
     }
@@ -633,11 +725,21 @@ private fun SettingsScreen(
     onDeleteAgent: (Long) -> Unit,
     onClearCurrentHistory: () -> Unit,
     openAiApiKey: String,
-    onSaveOpenAiApiKey: (String) -> Unit
+    onSaveOpenAiApiKey: (String) -> Unit,
+    speechRate: Float = 1.0f,
+    onSetSpeechRate: (Float) -> Unit = {},
+    currentLanguage: java.util.Locale = java.util.Locale.forLanguageTag("pt-BR"),
+    onSetLanguage: (java.util.Locale) -> Unit = {},
+    onTestTts: () -> Unit = {},
+    vadMode: com.example.voice.VadMode = com.example.voice.VadMode.BALANCED,
+    onSetVadMode: (com.example.voice.VadMode) -> Unit = {},
+    onTestApiKey: (String, (Boolean, String) -> Unit) -> Unit = { _, _ -> }
 ) {
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var tempOpenAiKey by remember(openAiApiKey) { mutableStateOf(openAiApiKey) }
+    var testStatusMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+    var isTestingKey by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -745,7 +847,7 @@ private fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // OpenAI API Key Section
+        // Text-to-Speech Settings Section (Natural Speech & Speed)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -754,20 +856,274 @@ private fun SettingsScreen(
                 .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
                 .padding(12.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = null,
+                    tint = Color(0xFF00E5FF),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SÍNTESE DE VOZ (TEXT-TO-SPEECH)",
+                    color = Color(0xFF00E5FF),
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
-                text = "CONFIGURAR OPENAI API KEY (GPT-4o-mini)",
-                color = Color(0xFF00E5FF),
+                text = "VELOCIDADE DE FALA: ${String.format(java.util.Locale.US, "%.2fx", speechRate)}",
+                color = Color(0xFF94A3B8),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf(0.75f to "0.75x", 1.0f to "1.0x", 1.25f to "1.25x", 1.5f to "1.5x").forEach { (rate, label) ->
+                    val isCurrent = kotlin.math.abs(speechRate - rate) < 0.05f
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSetSpeechRate(rate) }
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isCurrent) Color.Black else Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "IDIOMA DA VOZ:",
+                color = Color(0xFF94A3B8),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf(
+                    java.util.Locale.forLanguageTag("pt-BR") to "🇧🇷 PT",
+                    java.util.Locale.US to "🇺🇸 EN",
+                    java.util.Locale.forLanguageTag("es-ES") to "🇪🇸 ES",
+                    java.util.Locale.FRENCH to "🇫🇷 FR"
+                ).forEach { (loc, label) ->
+                    val isCurrent = (currentLanguage.language == loc.language)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSetLanguage(loc) }
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isCurrent) Color.Black else Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = onTestTts,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF141F32)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF)),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = null,
+                    tint = Color(0xFF00E5FF),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "TESTAR ÁUDIO NATURAL",
+                    color = Color(0xFF00E5FF),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // VAD & Noise Rejection Section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF0C101A))
+                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.GraphicEq,
+                    contentDescription = null,
+                    tint = Color(0xFFFF2A85),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "DETECÇÃO DE VOZ (VAD) & FILTRO DE RUÍDO",
+                    color = Color(0xFFFF2A85),
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Para de gravar automaticamente ao parar de falar. Ajuste a imunidade para som de computador/caixas de som ligadas:",
+                color = Color(0xFF64748B),
                 fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                lineHeight = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            com.example.voice.VadMode.values().forEach { mode ->
+                val isSelected = (vadMode == mode)
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isSelected) Color(0xFFFF2A85).copy(alpha = 0.15f) else Color(0xFF141F32),
+                    border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF2A85)) else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp)
+                        .clickable { onSetVadMode(mode) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { onSetVadMode(mode) },
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFF2A85))
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = mode.title,
+                                color = if (isSelected) Color.White else Color(0xFFCBD5E1),
+                                fontSize = 11.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                            Text(
+                                text = mode.description,
+                                color = Color(0xFF94A3B8),
+                                fontSize = 9.5.sp,
+                                lineHeight = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // AI API Key & Neural Engine Configuration Section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF0C101A))
+                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ROTEAMENTO IA & CHAVE DE API",
+                    color = Color(0xFF00E5FF),
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+
+                val modeBadge = when {
+                    tempOpenAiKey.trim().startsWith("oc_sk_") -> "OmniRoute Ativo ⚡"
+                    tempOpenAiKey.trim().startsWith("sk-") -> "OpenAI 🟢"
+                    tempOpenAiKey.trim().startsWith("AIza") -> "Gemini 🟢"
+                    tempOpenAiKey.trim().isBlank() -> "OmniRoute Padrão ⚡"
+                    else -> "Personalizada 🟢"
+                }
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFF141F32),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF).copy(alpha = 0.5f))
+                ) {
+                    Text(
+                        text = modeBadge,
+                        color = Color(0xFF00E5FF),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "O aplicativo já vem pré-configurado via OmniRoute com chave universal integrada. Você não precisa digitar nada para conversar com os agentes inteligentes!",
+                color = Color(0xFF94A3B8),
+                fontSize = 10.5.sp,
+                lineHeight = 14.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = tempOpenAiKey,
-                onValueChange = { tempOpenAiKey = it },
-                placeholder = { Text("sk-...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                onValueChange = {
+                    tempOpenAiKey = it
+                    testStatusMessage = null
+                },
+                placeholder = { Text("oc_sk_... (OmniRoute integrado) ou customizada", color = Color(0xFF64748B), fontSize = 11.5.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -783,13 +1139,62 @@ private fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = { onSaveOpenAiApiKey(tempOpenAiKey) },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
-                shape = RoundedCornerShape(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("SALVAR OPENAI API KEY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Button(
+                    onClick = {
+                        onSaveOpenAiApiKey(tempOpenAiKey)
+                        testStatusMessage = Pair(true, "Chave salva com sucesso!")
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("SALVAR CHAVE", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                }
+
+                Button(
+                    onClick = {
+                        isTestingKey = true
+                        testStatusMessage = null
+                        onTestApiKey(tempOpenAiKey) { success, msg ->
+                            isTestingKey = false
+                            testStatusMessage = Pair(success, msg)
+                        }
+                    },
+                    enabled = !isTestingKey,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF141F32)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        if (isTestingKey) "TESTANDO..." else "TESTAR CONEXÃO",
+                        color = Color(0xFF00E5FF),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+
+            testStatusMessage?.let { (success, message) ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (success) Color(0xFF064E3B).copy(alpha = 0.5f) else Color(0xFF7F1D1D).copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (success) Color(0xFF10B981) else Color(0xFFEF4444)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = message,
+                        color = if (success) Color(0xFF6EE7B7) else Color(0xFFFCA5A5),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
             }
         }
 

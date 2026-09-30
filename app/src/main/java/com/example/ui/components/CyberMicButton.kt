@@ -46,7 +46,12 @@ fun CyberMicButton(
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 2200 else if (isLoading) 1200 else 8000,
+                durationMillis = when {
+                    isListening -> 2000
+                    isLoading -> 1000 // Fast energetic rotation while AI processes
+                    isSpeaking -> 1600 // Smooth rhythmic rotation while AI speaks
+                    else -> 8000
+                },
                 easing = LinearEasing
             ),
             repeatMode = RepeatMode.Restart
@@ -64,13 +69,23 @@ fun CyberMicButton(
         label = "animatedVoiceLevel"
     )
 
-    // Pulse scale for shockwave aura
+    // Dedicated Pulsing Shockwave Scale for AI Processing and Speaking
     val auraScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isListening || isSpeaking) 1.25f else 1.05f,
+        targetValue = when {
+            isListening -> 1.28f
+            isLoading -> 1.35f // Deep energetic pulse while processing
+            isSpeaking -> 1.24f // Rhythmic breathing pulse while AI talks
+            else -> 1.05f
+        },
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 750 else if (isSpeaking) 600 else 2400,
+                durationMillis = when {
+                    isListening -> 750
+                    isLoading -> 600 // Fast heartbeat-style pulse
+                    isSpeaking -> 850 // Smooth breathing pulse
+                    else -> 2400
+                },
                 easing = FastOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
@@ -78,17 +93,73 @@ fun CyberMicButton(
         label = "auraScale"
     )
 
-    val auraAlpha by infiniteTransition.animateFloat(
-        initialValue = if (isListening || isSpeaking) 0.5f else 0.15f,
-        targetValue = 0.05f,
+    // Secondary ripple shockwave for processing/speaking
+    val secondaryRippleScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = when {
+            isLoading -> 1.50f
+            isSpeaking -> 1.38f
+            isListening -> 1.30f
+            else -> 1.08f
+        },
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = if (isListening) 750 else if (isSpeaking) 600 else 2400,
+                durationMillis = when {
+                    isLoading -> 800
+                    isSpeaking -> 1100
+                    else -> 1500
+                },
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "secondaryRippleScale"
+    )
+
+    val auraAlpha by infiniteTransition.animateFloat(
+        initialValue = when {
+            isLoading -> 0.65f
+            isSpeaking -> 0.55f
+            isListening -> 0.50f
+            else -> 0.12f
+        },
+        targetValue = when {
+            isLoading -> 0.10f
+            isSpeaking -> 0.08f
+            isListening -> 0.05f
+            else -> 0.02f
+        },
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = when {
+                    isLoading -> 600
+                    isSpeaking -> 850
+                    isListening -> 750
+                    else -> 2400
+                },
                 easing = FastOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
         ),
         label = "auraAlpha"
+    )
+
+    // Core button pulsing scale for tactile visual feedback during AI thought or speech
+    val corePulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = when {
+            isLoading -> 1.08f // Heartbeat expansion during processing
+            isSpeaking -> 1.05f // Harmonic vocal resonance expansion
+            else -> 1f
+        },
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = if (isLoading) 500 else 750,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "corePulseScale"
     )
 
     val rainbowColors = listOf(
@@ -101,35 +172,59 @@ fun CyberMicButton(
         Color(0xFF00E5FF)  // Back to Cyan
     )
 
+    // Dynamic aura colors depending on the AI state
+    val primaryAuraColor = when {
+        isLoading -> Color(0xFFFFEA00) // Electric Yellow/Gold while AI thinking/processing
+        isSpeaking -> Color(0xFF00E5FF) // Radiant Cyan while AI speaking
+        isListening -> Color(0xFFFF2A85) // Hot Magenta while listening to user
+        else -> Color(0xFF00E5FF)
+    }
+
+    val secondaryAuraColor = when {
+        isLoading -> Color(0xFFFF6D00) // Orange flare
+        isSpeaking -> Color(0xFF8B5CF6) // Purple flare
+        isListening -> Color(0xFF00E5FF) // Cyan flare
+        else -> Color(0xFFFF2A85)
+    }
+
     Box(
         modifier = modifier
-            .size(136.dp),
+            .size(142.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Outer pulsing shockwave rings that expand with voice input level
+        // Outer pulsing shockwave rings that expand with voice input level or AI processing/speaking
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val baseRadius = size.width * 0.44f
+            val baseRadius = size.width * 0.40f
 
             // Dynamic voice flare multiplier
             val voiceExpansion = 1f + (animatedVoiceLevel * 0.35f)
             val totalScale = auraScale * voiceExpansion
-            val combinedAlpha = (auraAlpha + animatedVoiceLevel * 0.4f).coerceIn(0f, 0.8f)
+            val combinedAlpha = (auraAlpha + animatedVoiceLevel * 0.4f).coerceIn(0f, 0.9f)
 
-            // Outer subtle glow halo
+            // Outer primary shockwave ring
             drawCircle(
-                color = Color(0xFF00E5FF).copy(alpha = combinedAlpha * 0.5f),
-                radius = baseRadius * totalScale * 1.18f,
+                color = primaryAuraColor.copy(alpha = combinedAlpha * 0.55f),
+                radius = baseRadius * totalScale * 1.15f,
                 center = center
             )
+            // Secondary ripple ring (visible during processing and speaking)
+            if (isLoading || isSpeaking || isListening) {
+                drawCircle(
+                    color = secondaryAuraColor.copy(alpha = (combinedAlpha * 0.45f).coerceIn(0f, 0.6f)),
+                    radius = baseRadius * secondaryRippleScale,
+                    center = center
+                )
+            }
+            // Inner aura ring
             drawCircle(
-                color = Color(0xFFFF2A85).copy(alpha = combinedAlpha * 0.45f),
+                color = primaryAuraColor.copy(alpha = combinedAlpha * 0.45f),
                 radius = baseRadius * totalScale,
                 center = center
             )
         }
 
-        // The rainbow outer ring with glow
+        // The rainbow outer ring with glow and rotation
         Canvas(
             modifier = Modifier
                 .size(118.dp)
@@ -145,7 +240,7 @@ fun CyberMicButton(
                 brush = Brush.sweepGradient(rainbowColors, center = center),
                 radius = radius,
                 style = Stroke(width = 6.dp.toPx() + extraStroke),
-                alpha = (0.4f + animatedVoiceLevel * 0.5f).coerceIn(0f, 0.9f)
+                alpha = (if (isLoading || isSpeaking) 0.85f else (0.4f + animatedVoiceLevel * 0.5f)).coerceIn(0f, 0.95f)
             )
 
             // Draw crisp rainbow ring
@@ -156,24 +251,35 @@ fun CyberMicButton(
             )
         }
 
-        // Inner dark button core with subtle scaling on loud audio
+        // Inner dark button core with pulsing scaling while AI is processing or speaking
+        val coreScale = (corePulseScale + (animatedVoiceLevel * 0.08f))
+
         Box(
             modifier = Modifier
                 .size(86.dp)
-                .scale(1f + (animatedVoiceLevel * 0.08f))
+                .scale(coreScale)
                 .shadow(
-                    elevation = (16 + (animatedVoiceLevel * 14)).dp,
+                    elevation = when {
+                        isLoading -> 26.dp
+                        isSpeaking -> 22.dp
+                        isListening -> (16 + (animatedVoiceLevel * 14)).dp
+                        else -> 12.dp
+                    },
                     shape = CircleShape,
-                    spotColor = if (isListening) Color(0xFFFF2A85) else Color(0xFF00E5FF)
+                    spotColor = primaryAuraColor
                 )
                 .clip(CircleShape)
                 .background(Color(0xFF0C101A))
                 .border(
-                    width = (1.5 + (animatedVoiceLevel * 1.5)).dp,
+                    width = when {
+                        isLoading -> 2.5.dp
+                        isSpeaking -> 2.dp
+                        else -> (1.5 + (animatedVoiceLevel * 1.5)).dp
+                    },
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF00E5FF).copy(alpha = 0.85f),
-                            Color(0xFFFF2A85).copy(alpha = 0.85f)
+                            primaryAuraColor.copy(alpha = 0.9f),
+                            secondaryAuraColor.copy(alpha = 0.9f)
                         )
                     ),
                     shape = CircleShape
@@ -185,14 +291,26 @@ fun CyberMicButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Microphone Icon with gradient styling
+            // Microphone Icon with contextual icon and tint
+            val iconTint = when {
+                isListening -> Color(0xFFFF2A85)
+                isLoading -> Color(0xFFFFEA00)
+                isSpeaking -> Color(0xFF00E5FF)
+                else -> Color(0xFF00E5FF)
+            }
+
             Icon(
                 imageVector = if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                contentDescription = if (isListening) "Parar de Ouvir" else "Falar",
+                contentDescription = when {
+                    isListening -> "Parar de Ouvir"
+                    isLoading -> "IA Processando..."
+                    isSpeaking -> "IA Falando..."
+                    else -> "Falar"
+                },
                 modifier = Modifier
                     .size(42.dp)
                     .scale(if (isListening) (1.1f + animatedVoiceLevel * 0.12f) else 1f),
-                tint = if (isListening) Color(0xFFFF2A85) else Color(0xFF00E5FF)
+                tint = iconTint
             )
         }
     }

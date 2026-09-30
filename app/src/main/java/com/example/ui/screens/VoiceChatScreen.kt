@@ -1,14 +1,10 @@
 package com.example.ui.screens
 
 import android.Manifest
-import android.content.Intent
-import android.os.Bundle
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,20 +61,47 @@ fun VoiceChatScreen(
         }
     }
 
-    // Speech Recognizer setup
-    val speechRecognizer = remember {
-        if (SpeechRecognizer.isRecognitionAvailable(context)) {
-            SpeechRecognizer.createSpeechRecognizer(context)
-        } else {
-            null
-        }
-    }
+    val audioLevel by viewModel.audioLevel.collectAsState()
+    val vadState by viewModel.vadState.collectAsState()
+    var showMicrophoneDisclosureDialog by remember { mutableStateOf(false) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "voiceChatMicPulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = when {
+            isLoading -> 1.25f
+            isSpeaking -> 1.18f
+            isListening -> 1.15f
+            else -> 1f
+        },
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = if (isLoading) 550 else if (isSpeaking) 750 else 650,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = if (isLoading || isSpeaking || isListening) 0.55f else 0f,
+        targetValue = 0.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = if (isLoading) 550 else if (isSpeaking) 750 else 650,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted && speechRecognizer != null) {
-            startListening(context, speechRecognizer, viewModel)
+        if (isGranted) {
+            viewModel.startListeningWithVad()
         }
     }
 
@@ -224,6 +248,7 @@ fun VoiceChatScreen(
         VoiceWaveform(
             isListening = isListening,
             isSpeaking = isSpeaking,
+            audioLevel = audioLevel,
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
@@ -242,47 +267,72 @@ fun VoiceChatScreen(
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Mic Button with Pulse effect
-                IconButton(
-                    onClick = {
-                        if (isListening) {
-                            viewModel.setListening(false)
-                            speechRecognizer?.stopListening()
-                        } else {
-                            val permissionCheck = androidx.core.content.ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.RECORD_AUDIO
-                            )
-                            if (permissionCheck == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                viewModel.setListening(true)
-                                if (speechRecognizer != null) {
-                                    startListening(context, speechRecognizer, viewModel)
-                                } else {
-                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                        viewModel.setListening(false)
-                                        viewModel.sendMessage("Olá! Como você pode me ajudar hoje?")
-                                    }, 2000L)
-                                }
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .size(52.dp)
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = if (isListening) listOf(Color.Red, MaterialTheme.colorScheme.primary)
-                                else listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
-                            ),
-                            shape = CircleShape
-                        )
+                // Mic Button with Pulse effect for listening, AI processing and speaking
+                val micColors = when {
+                    isListening -> listOf(Color.Red, MaterialTheme.colorScheme.primary)
+                    isLoading -> listOf(Color(0xFFFFEA00), Color(0xFFFF6D00))
+                    isSpeaking -> listOf(Color(0xFF00E5FF), MaterialTheme.colorScheme.primary)
+                    else -> listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(56.dp)
                 ) {
-                    Icon(
-                        imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
-                        contentDescription = "Falar",
-                        tint = Color.White
-                    )
+                    if (isLoading || isSpeaking || isListening) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .scale(pulseScale * 1.15f)
+                                .clip(CircleShape)
+                                .background(
+                                    color = if (isLoading) Color(0xFFFFEA00).copy(alpha = pulseAlpha)
+                                    else if (isSpeaking) Color(0xFF00E5FF).copy(alpha = pulseAlpha)
+                                    else Color.Red.copy(alpha = pulseAlpha)
+                                )
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            if (isListening) {
+                                viewModel.stopListeningWithVad()
+                            } else {
+                                val permissionCheck = androidx.core.content.ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.RECORD_AUDIO
+                                )
+                                if (permissionCheck == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                    viewModel.startListeningWithVad()
+                                } else {
+                                    showMicrophoneDisclosureDialog = true
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .size(52.dp)
+                            .scale(pulseScale)
+                            .background(
+                                brush = Brush.radialGradient(colors = micColors),
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = when {
+                                isListening -> Icons.Default.MicOff
+                                isLoading -> Icons.Default.Mic
+                                isSpeaking -> Icons.Default.Mic
+                                else -> Icons.Default.Mic
+                            },
+                            contentDescription = when {
+                                isListening -> "Parar de Ouvir"
+                                isLoading -> "IA Processando..."
+                                isSpeaking -> "IA Falando..."
+                                else -> "Falar"
+                            },
+                            tint = if (isLoading) Color.Black else Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -339,41 +389,42 @@ fun VoiceChatScreen(
             }
         }
     }
-}
 
-private fun startListening(context: android.content.Context, speechRecognizer: SpeechRecognizer, viewModel: MainViewModel) {
-    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE, "pt-BR")
-        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-    }
-
-    speechRecognizer.setRecognitionListener(object : RecognitionListener {
-        override fun onReadyForSpeech(params: Bundle?) {}
-        override fun onBeginningOfSpeech() {}
-        override fun onRmsChanged(rmsdB: Float) {}
-        override fun onBufferReceived(buffer: ByteArray?) {}
-        override fun onEndOfSpeech() {
-            viewModel.setListening(false)
-        }
-        override fun onError(error: Int) {
-            viewModel.setListening(false)
-        }
-        override fun onResults(results: Bundle?) {
-            viewModel.setListening(false)
-            val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-            if (!matches.isNullOrEmpty()) {
-                val spokenText = matches[0]
-                viewModel.sendMessage(spokenText)
+    if (showMicrophoneDisclosureDialog) {
+        AlertDialog(
+            onDismissRequest = { showMicrophoneDisclosureDialog = false },
+            title = {
+                Text(
+                    text = "Acesso ao Microfone",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            },
+            text = {
+                Text(
+                    text = "Para que você possa conversar com o agente de inteligência artificial por voz, o aplicativo precisa de permissão para utilizar o microfone.\n\n" +
+                           "• O áudio é convertido em texto em tempo real (VAD) para envio à IA.\n" +
+                           "• Nenhuma gravação de voz é salva permanentemente ou comercializada.",
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showMicrophoneDisclosureDialog = false
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                ) {
+                    Text("CONCORDAR E CONTINUAR", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMicrophoneDisclosureDialog = false }) {
+                    Text("AGORA NÃO", fontSize = 12.sp)
+                }
             }
-        }
-        override fun onPartialResults(partialResults: Bundle?) {}
-        override fun onEvent(eventType: Int, params: Bundle?) {}
-    })
-
-    try {
-        speechRecognizer.startListening(intent)
-    } catch (e: Exception) {
-        viewModel.setListening(false)
+        )
     }
 }
+

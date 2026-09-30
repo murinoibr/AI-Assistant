@@ -22,7 +22,7 @@ data class OpenAiMessage(
 data class OpenAiChatRequest(
     val model: String = "gpt-4o-mini",
     val messages: List<OpenAiMessage>,
-    @Json(name = "temperature") val temperature: Float? = 0.7f
+    @param:Json(name = "temperature") val temperature: Float? = 0.7f
 )
 
 @JsonClass(generateAdapter = true)
