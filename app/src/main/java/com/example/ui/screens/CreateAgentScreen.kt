@@ -226,9 +226,19 @@ fun CreateAgentScreen(
             shape = RoundedCornerShape(16.dp),
             enabled = name.isNotBlank() && systemPrompt.isNotBlank() && !isLoading
         ) {
-            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Salvar e Iniciar Conversa", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Criando Agente...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            } else {
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Salvar e Iniciar Conversa", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

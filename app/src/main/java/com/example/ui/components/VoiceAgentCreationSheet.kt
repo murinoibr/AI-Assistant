@@ -342,13 +342,27 @@ fun VoiceAgentCreationSheet(
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                         enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
                     ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Criar e Iniciar Conversa",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.Black,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Criando Agente...",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        } else {
+                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Criar e Iniciar Conversa",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
                     }
                 }
             }
