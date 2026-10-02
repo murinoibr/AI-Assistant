@@ -14,7 +14,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +34,8 @@ fun AgentLibraryBottomSheet(
     onDismiss: () -> Unit,
     onOpenVoiceCreate: () -> Unit
 ) {
+    var agentToDelete by remember { mutableStateOf<AgentEntity?>(null) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = BackgroundObsidian,
@@ -167,7 +169,7 @@ fun AgentLibraryBottomSheet(
                                 )
                             } else if (agent.isCustom) {
                                 IconButton(
-                                    onClick = { viewModel.deleteAgent(agent.id) }
+                                    onClick = { agentToDelete = agent }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -181,5 +183,29 @@ fun AgentLibraryBottomSheet(
                 }
             }
         }
+    }
+
+    if (agentToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { agentToDelete = null },
+            title = { Text(text = "Excluir Agente", color = TextPureWhite) },
+            text = { Text(text = "Tem certeza que deseja excluir o agente '${agentToDelete?.name}'?", color = TextMuted) },
+            containerColor = BackgroundObsidian,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        agentToDelete?.let { viewModel.deleteAgent(it.id) }
+                        agentToDelete = null
+                    }
+                ) {
+                    Text("Confirmar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { agentToDelete = null }) {
+                    Text("Cancelar", color = TextMuted)
+                }
+            }
+        )
     }
 }
