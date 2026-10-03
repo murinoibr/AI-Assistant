@@ -32,6 +32,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.*
@@ -268,6 +270,7 @@ fun VoiceAgentCreationSheet(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = BorderSubtle,
@@ -283,6 +286,7 @@ fun VoiceAgentCreationSheet(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = BorderSubtle,
@@ -299,6 +303,7 @@ fun VoiceAgentCreationSheet(
                             .fillMaxWidth()
                             .height(100.dp),
                         shape = RoundedCornerShape(14.dp),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = BorderSubtle,

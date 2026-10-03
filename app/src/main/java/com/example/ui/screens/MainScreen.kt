@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -629,7 +630,10 @@ private fun InteractionScreen(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Send
+                ),
                 keyboardActions = KeyboardActions(
                     onSend = {
                         if (textInput.isNotBlank()) {

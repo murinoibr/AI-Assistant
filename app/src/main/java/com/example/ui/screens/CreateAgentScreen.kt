@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.viewmodel.MainViewModel
@@ -179,7 +181,8 @@ fun CreateAgentScreen(
             label = { Text("Nome do Agente") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -190,7 +193,8 @@ fun CreateAgentScreen(
             label = { Text("Descrição breve") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -200,7 +204,8 @@ fun CreateAgentScreen(
             onValueChange = { systemPrompt = it },
             label = { Text("Prompt do Sistema (Personalidade)") },
             modifier = Modifier.fillMaxWidth().height(120.dp),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
