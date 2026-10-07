@@ -57,13 +57,8 @@ jobs:
             cd "$PROJECT_ROOT"
           fi
 
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            echo "gradlew não encontrado. Compilando com Gradle 9.3.1..."
-            gradle assembleDebug --stacktrace
-          fi
+          echo "Compilando com Gradle 9.3.1..."
+          gradle assembleDebug --stacktrace
 
       - name: Salvar o arquivo APK
         uses: actions/upload-artifact@v4
