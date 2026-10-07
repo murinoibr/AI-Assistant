@@ -31,20 +31,28 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;36.0.0'
 
-      - name: 📋 Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-cleanup: always
+
+      - name: 🔑 Generate debug keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cp debug.keystore app/ 2>/dev/null || true
 
       - name: 🧹 Clean build
-        run: ./gradlew clean
+        run: gradle clean
 
       - name: 🐛 Debug Build APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace
 
       - name: 📦 Build Release AAB (Bundle)
-        run: ./gradlew bundleRelease --stacktrace
+        run: gradle bundleRelease --stacktrace
 
       - name: 📦 Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+        run: gradle assembleRelease --stacktrace
 
       - name: 📁 Create output directory
         run: mkdir -p build-output
