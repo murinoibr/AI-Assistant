@@ -83,7 +83,7 @@ fun AgentGalleryScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                             viewModel.selectAgent(agent)
                             onAgentSelected()
                         },

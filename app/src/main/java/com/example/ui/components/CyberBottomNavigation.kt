@@ -100,6 +100,7 @@ private fun CyberNavItem(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
+                role = androidx.compose.ui.semantics.Role.Tab,
                 onClick = onClick
             )
             .padding(horizontal = 16.dp, vertical = 4.dp),

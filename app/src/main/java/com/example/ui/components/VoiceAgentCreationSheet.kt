@@ -137,7 +137,7 @@ fun VoiceAgentCreationSheet(
                         ),
                         shape = CircleShape
                     )
-                    .clickable {
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                         if (isListening) {
                             speechRecognizer?.stopListening()
                             isListening = false
@@ -236,7 +236,7 @@ fun VoiceAgentCreationSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showManualForm = !showManualForm }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) { showManualForm = !showManualForm }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically

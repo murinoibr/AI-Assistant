@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configurar Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -57,13 +57,8 @@ jobs:
             cd "$PROJECT_ROOT"
           fi
 
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            echo "gradlew não encontrado. Compilando com Gradle 9.3.1..."
-            gradle assembleDebug --stacktrace
-          fi
+          echo "Compilando com Gradle 9.3.1..."
+          gradle assembleDebug --stacktrace
 
       - name: Salvar o arquivo APK
         uses: actions/upload-artifact@v4

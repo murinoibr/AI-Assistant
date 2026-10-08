@@ -565,7 +565,7 @@ private fun InteractionScreen(
                                         tint = Color(0xFF00E5FF),
                                         modifier = Modifier
                                             .size(18.dp)
-                                            .clickable { onReplayTts(msg.text) }
+                                            .clickable(role = androidx.compose.ui.semantics.Role.Button) { onReplayTts(msg.text) }
                                     )
                                 }
                             }
@@ -799,7 +799,7 @@ private fun SettingsScreen(
                             if (isSelected) Color(0xFF00E5FF) else Color(0xFF1E293B),
                             RoundedCornerShape(14.dp)
                         )
-                        .clickable { onSelectAgent(agent) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { onSelectAgent(agent) }
                         .padding(12.dp)
                 ) {
                     Row(
@@ -898,7 +898,7 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetSpeechRate(rate) }
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button) { onSetSpeechRate(rate) }
                     ) {
                         Text(
                             text = label,
@@ -939,7 +939,7 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetLanguage(loc) }
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button) { onSetLanguage(loc) }
                     ) {
                         Text(
                             text = label,
@@ -1029,7 +1029,7 @@ private fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 3.dp)
-                        .clickable { onSetVadMode(mode) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { onSetVadMode(mode) }
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -1222,7 +1222,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) { showPrivacyDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1258,7 +1258,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) { showClearConfirmDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
