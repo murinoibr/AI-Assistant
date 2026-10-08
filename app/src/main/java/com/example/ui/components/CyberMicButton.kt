@@ -287,6 +287,7 @@ fun CyberMicButton(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    role = androidx.compose.ui.semantics.Role.Button,
                     onClick = onClick
                 ),
             contentAlignment = Alignment.Center

@@ -89,7 +89,7 @@ private fun AgentHeaderRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onSwitchAgentClick() },
+            .clickable(role = androidx.compose.ui.semantics.Role.Button) { onSwitchAgentClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
