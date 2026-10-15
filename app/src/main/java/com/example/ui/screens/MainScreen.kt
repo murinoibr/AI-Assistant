@@ -737,6 +737,7 @@ private fun SettingsScreen(
 ) {
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
+    var agentToDelete by remember { mutableStateOf<AgentEntity?>(null) }
     var tempOpenAiKey by remember(openAiApiKey) { mutableStateOf(openAiApiKey) }
     var testStatusMessage by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var isTestingKey by remember { mutableStateOf(false) }
@@ -831,7 +832,7 @@ private fun SettingsScreen(
                                 fontWeight = FontWeight.Black
                             )
                         } else if (agent.isCustom) {
-                            IconButton(onClick = { onDeleteAgent(agent.id) }) {
+                            IconButton(onClick = { agentToDelete = agent }) {
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "Excluir",
@@ -1334,6 +1335,40 @@ private fun SettingsScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
                 ) {
                     Text("ENTENDI", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    // Delete Agent Confirmation Dialog
+    if (agentToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { agentToDelete = null },
+            containerColor = Color(0xFF0F172A),
+            title = {
+                Text("Excluir Agente", color = Color.White, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(
+                    "Tem certeza que deseja excluir o agente '${agentToDelete?.name}'?",
+                    color = Color(0xFFCBD5E1),
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        agentToDelete?.let { onDeleteAgent(it.id) }
+                        agentToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                ) {
+                    Text("EXCLUIR", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { agentToDelete = null }) {
+                    Text("CANCELAR", color = Color.White)
                 }
             }
         )
