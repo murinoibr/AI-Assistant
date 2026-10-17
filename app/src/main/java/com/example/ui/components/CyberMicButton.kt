@@ -285,6 +285,7 @@ fun CyberMicButton(
                     shape = CircleShape
                 )
                 .clickable(
+                    role = androidx.compose.ui.semantics.Role.Button,
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onClick
