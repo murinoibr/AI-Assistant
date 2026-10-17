@@ -91,6 +91,7 @@ fun NeuralVoiceOrb(
             .scale(animatedScale)
             .clip(CircleShape)
             .clickable(
+                role = androidx.compose.ui.semantics.Role.Button,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = true, color = NeonCyan),
                 onClick = onClick
