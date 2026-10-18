@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -799,7 +800,7 @@ private fun SettingsScreen(
                             if (isSelected) Color(0xFF00E5FF) else Color(0xFF1E293B),
                             RoundedCornerShape(14.dp)
                         )
-                        .clickable { onSelectAgent(agent) }
+                        .clickable(role = Role.Button) { onSelectAgent(agent) }
                         .padding(12.dp)
                 ) {
                     Row(
@@ -1222,7 +1223,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
+                    .clickable(role = Role.Button) { showPrivacyDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1258,7 +1259,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
+                    .clickable(role = Role.Button) { showClearConfirmDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
