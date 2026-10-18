@@ -37,7 +37,10 @@ jobs:
           chmod +x ./gradlew
 
       - name: 🧹 Clean build
-        run: ./gradlew clean
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cp debug.keystore app/ 2>/dev/null || true
+          ./gradlew clean
 
       - name: 🐛 Debug Build APK
         run: ./gradlew assembleDebug --stacktrace
