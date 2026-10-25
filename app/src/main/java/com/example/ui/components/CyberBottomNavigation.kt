@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 
 /**
  * Bottom Navigation bar from the reference image.
@@ -100,6 +101,8 @@ private fun CyberNavItem(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
+                onClickLabel = "Navegar para $label",
+                role = Role.Tab,
                 onClick = onClick
             )
             .padding(horizontal = 16.dp, vertical = 4.dp),

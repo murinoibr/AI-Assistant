@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.example.data.AgentEntity
 import com.example.viewmodel.MainViewModel
 
@@ -83,7 +84,10 @@ fun AgentGalleryScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(
+                            onClickLabel = "Selecionar agente ${agent.name}",
+                            role = Role.Button
+                        ) {
                             viewModel.selectAgent(agent)
                             onAgentSelected()
                         },

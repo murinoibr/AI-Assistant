@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.example.ui.theme.*
 import com.example.viewmodel.MainViewModel
 
@@ -137,7 +138,10 @@ fun VoiceAgentCreationSheet(
                         ),
                         shape = CircleShape
                     )
-                    .clickable {
+                    .clickable(
+                        onClickLabel = if (isListening) "Parar de ouvir" else "Começar a ouvir",
+                        role = Role.Button
+                    ) {
                         if (isListening) {
                             speechRecognizer?.stopListening()
                             isListening = false
@@ -236,7 +240,10 @@ fun VoiceAgentCreationSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showManualForm = !showManualForm }
+                    .clickable(
+                        onClickLabel = "Alternar formulário manual",
+                        role = Role.Button
+                    ) { showManualForm = !showManualForm }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically

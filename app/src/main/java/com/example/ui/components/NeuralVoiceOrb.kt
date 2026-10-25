@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
 import com.example.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.sin
@@ -93,6 +94,8 @@ fun NeuralVoiceOrb(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = true, color = NeonCyan),
+                onClickLabel = if (isListening) "Parar gravação" else "Iniciar gravação",
+                role = Role.Button,
                 onClick = onClick
             ),
         contentAlignment = Alignment.Center

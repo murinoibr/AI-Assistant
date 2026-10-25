@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.example.data.AgentEntity
 import com.example.ui.theme.*
 import com.example.viewmodel.MainViewModel
@@ -104,7 +105,10 @@ fun AgentLibraryBottomSheet(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(
+                                onClickLabel = "Selecionar agente ${agent.name}",
+                                role = Role.Button
+                            ) {
                                 viewModel.selectAgent(agent)
                                 onDismiss()
                             },
