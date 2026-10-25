@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.example.data.AgentEntity
 import com.example.data.MessageEntity
 import com.example.ui.components.VoiceWaveform
@@ -117,7 +118,10 @@ fun VoiceChatScreen(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .clickable { onOpenAgentSelector() },
+                    .clickable(
+                        onClickLabel = "Selecionar Agente",
+                        role = Role.Button
+                    ) { onOpenAgentSelector() },
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                 tonalElevation = 2.dp
@@ -175,7 +179,10 @@ fun VoiceChatScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp)
-                    .clickable { onOpenAgentSelector() },
+                    .clickable(
+                        onClickLabel = "Selecionar Agente",
+                        role = Role.Button
+                    ) { onOpenAgentSelector() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "Nenhum agente selecionado. Toque para escolher.", color = MaterialTheme.colorScheme.primary)

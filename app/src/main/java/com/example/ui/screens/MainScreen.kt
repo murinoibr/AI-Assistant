@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.AgentEntity
 import com.example.ui.components.*
@@ -565,7 +566,10 @@ private fun InteractionScreen(
                                         tint = Color(0xFF00E5FF),
                                         modifier = Modifier
                                             .size(18.dp)
-                                            .clickable { onReplayTts(msg.text) }
+                                            .clickable(
+                                                onClickLabel = "Ouvir novamente",
+                                                role = Role.Button
+                                            ) { onReplayTts(msg.text) }
                                     )
                                 }
                             }
@@ -799,7 +803,10 @@ private fun SettingsScreen(
                             if (isSelected) Color(0xFF00E5FF) else Color(0xFF1E293B),
                             RoundedCornerShape(14.dp)
                         )
-                        .clickable { onSelectAgent(agent) }
+                        .clickable(
+                            onClickLabel = "Selecionar agente ${agent.name}",
+                            role = Role.Button
+                        ) { onSelectAgent(agent) }
                         .padding(12.dp)
                 ) {
                     Row(
@@ -898,7 +905,10 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetSpeechRate(rate) }
+                            .clickable(
+                                onClickLabel = "Definir velocidade para $label",
+                                role = Role.Button
+                            ) { onSetSpeechRate(rate) }
                     ) {
                         Text(
                             text = label,
@@ -939,7 +949,10 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetLanguage(loc) }
+                            .clickable(
+                                onClickLabel = "Definir idioma para $label",
+                                role = Role.Button
+                            ) { onSetLanguage(loc) }
                     ) {
                         Text(
                             text = label,
@@ -1029,7 +1042,10 @@ private fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 3.dp)
-                        .clickable { onSetVadMode(mode) }
+                        .clickable(
+                            onClickLabel = "Selecionar modo VAD ${mode.title}",
+                            role = Role.Button
+                        ) { onSetVadMode(mode) }
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -1222,7 +1238,10 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
+                    .clickable(
+                        onClickLabel = "Exibir política de privacidade",
+                        role = Role.Button
+                    ) { showPrivacyDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1258,7 +1277,10 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
+                    .clickable(
+                        onClickLabel = "Limpar histórico",
+                        role = Role.Button
+                    ) { showClearConfirmDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween

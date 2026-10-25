@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.example.data.AgentEntity
 
 /**
@@ -89,7 +90,10 @@ private fun AgentHeaderRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onSwitchAgentClick() },
+            .clickable(
+                onClickLabel = "Trocar Agente",
+                role = Role.Button
+            ) { onSwitchAgentClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
