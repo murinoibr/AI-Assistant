@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.Role
+
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -287,6 +289,13 @@ fun CyberMicButton(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    role = Role.Button,
+                    onClickLabel = when {
+                        isListening -> "Parar de Ouvir"
+                        isLoading -> "IA Processando"
+                        isSpeaking -> "IA Falando"
+                        else -> "Falar"
+                    },
                     onClick = onClick
                 ),
             contentAlignment = Alignment.Center
