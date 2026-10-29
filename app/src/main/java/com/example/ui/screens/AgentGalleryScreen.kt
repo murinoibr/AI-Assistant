@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AgentEntity
 import com.example.viewmodel.MainViewModel
+import androidx.compose.ui.semantics.Role
 
 @Composable
 fun AgentGalleryScreen(
@@ -83,7 +84,10 @@ fun AgentGalleryScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(
+                            onClickLabel = "Select agent ${agent.name}",
+                            role = Role.Button
+                        ) {
                             viewModel.selectAgent(agent)
                             onAgentSelected()
                         },
