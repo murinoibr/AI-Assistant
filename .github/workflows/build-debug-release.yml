@@ -32,7 +32,9 @@ jobs:
           packages: 'platforms;android-36 build-tools;36.0.0'
 
       - name: 📋 Make gradlew executable
-        run: chmod +x ./gradlew
+        run: |
+          gradle wrapper --gradle-version 9.3.1
+          chmod +x ./gradlew
 
       - name: 🧹 Clean build
         run: ./gradlew clean
