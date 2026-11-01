@@ -32,7 +32,14 @@ jobs:
           packages: 'platforms;android-36 build-tools;36.0.0'
 
       - name: 📋 Make gradlew executable
-        run: chmod +x ./gradlew
+        run: |
+          gradle wrapper --gradle-version 9.3.1
+          chmod +x ./gradlew
+
+      - name: 🔑 Generate debug keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cp debug.keystore app/ 2>/dev/null || true
 
       - name: 🧹 Clean build
         run: ./gradlew clean
