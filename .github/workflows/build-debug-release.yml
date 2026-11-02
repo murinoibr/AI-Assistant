@@ -37,7 +37,7 @@ jobs:
           cp debug.keystore app/
 
       - name: 🔧 Generate Gradle Wrapper
-        run: gradle wrapper --gradle-version 8.8
+        run: gradle wrapper --gradle-version 9.3.1
 
       - name: 📋 Make gradlew executable
         run: chmod +x ./gradlew
