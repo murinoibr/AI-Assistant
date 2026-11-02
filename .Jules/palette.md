@@ -4,3 +4,6 @@
 ## 2024-10-27 - Added Confirmation Dialog for Delete Agent Action
 **Learning:** Implementing a confirmation dialog for destructive actions (like deleting an agent) is a crucial UX pattern. It prevents accidental data loss and provides a clearer interaction flow, ensuring users are confident before confirming irreversible choices.
 **Action:** Always consider adding confirmation modals or inline confirmations for actions that modify or delete user data. Ensure to use local state to track the item targeted for deletion and provide distinct confirmation and cancellation buttons.
+## 2024-05-19 - Accessible clickable containers
+**Learning:** Custom interactive components like Surfaces acting as buttons need explicit role and action descriptions for screen readers.
+**Action:** Always add `.clickable(role = Role.Button, onClickLabel = "...")` to generic clickable containers.
