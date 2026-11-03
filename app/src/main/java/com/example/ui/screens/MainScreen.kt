@@ -29,6 +29,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -565,7 +567,10 @@ private fun InteractionScreen(
                                         tint = Color(0xFF00E5FF),
                                         modifier = Modifier
                                             .size(18.dp)
-                                            .clickable { onReplayTts(msg.text) }
+                                            .clickable(
+                                                role = Role.Button,
+                                                onClickLabel = "Replay message"
+                                            ) { onReplayTts(msg.text) }
                                     )
                                 }
                             }
@@ -1222,7 +1227,10 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "View privacy policy"
+                    ) { showPrivacyDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1258,7 +1266,10 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Clear message history"
+                    ) { showClearConfirmDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
