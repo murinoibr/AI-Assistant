@@ -104,7 +104,10 @@ fun AgentLibraryBottomSheet(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(
+                                role = androidx.compose.ui.semantics.Role.Button,
+                                onClickLabel = "Select agent: ${agent.name}"
+                            ) {
                                 viewModel.selectAgent(agent)
                                 onDismiss()
                             },
