@@ -117,7 +117,10 @@ fun VoiceChatScreen(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .clickable { onOpenAgentSelector() },
+                    .clickable(
+                        role = androidx.compose.ui.semantics.Role.Button,
+                        onClickLabel = "Open Agent Selector"
+                    ) { onOpenAgentSelector() },
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                 tonalElevation = 2.dp
@@ -175,7 +178,10 @@ fun VoiceChatScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp)
-                    .clickable { onOpenAgentSelector() },
+                    .clickable(
+                        role = androidx.compose.ui.semantics.Role.Button,
+                        onClickLabel = "Open Agent Selector"
+                    ) { onOpenAgentSelector() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "Nenhum agente selecionado. Toque para escolher.", color = MaterialTheme.colorScheme.primary)
