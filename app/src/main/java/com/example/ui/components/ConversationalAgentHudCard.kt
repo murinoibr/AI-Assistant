@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -89,7 +90,7 @@ private fun AgentHeaderRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onSwitchAgentClick() },
+            .clickable(role = Role.Button, onClickLabel = "Switch Agent") { onSwitchAgentClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

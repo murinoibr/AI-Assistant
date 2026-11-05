@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -137,7 +138,7 @@ fun VoiceAgentCreationSheet(
                         ),
                         shape = CircleShape
                     )
-                    .clickable {
+                    .clickable(role = Role.Button, onClickLabel = if (isListening) "Stop recording" else "Start recording") {
                         if (isListening) {
                             speechRecognizer?.stopListening()
                             isListening = false
@@ -236,14 +237,14 @@ fun VoiceAgentCreationSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showManualForm = !showManualForm }
+                    .clickable(role = Role.Button, onClickLabel = "Toggle manual mode") { showManualForm = !showManualForm }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = null,
+                    contentDescription = "Edit manual form",
                     tint = NeonBlue,
                     modifier = Modifier.size(16.dp)
                 )
@@ -342,7 +343,7 @@ fun VoiceAgentCreationSheet(
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                         enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
                     ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Create and start", tint = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Criar e Iniciar Conversa",
