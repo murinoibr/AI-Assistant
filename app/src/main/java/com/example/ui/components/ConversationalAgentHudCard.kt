@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AgentEntity
+import androidx.compose.ui.semantics.Role
 
 /**
  * HUD Card matching "CONVERSATIONAL AGENT: PROJECT ALPHA" with
@@ -89,7 +90,7 @@ private fun AgentHeaderRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onSwitchAgentClick() },
+            .clickable(role = Role.Button, onClickLabel = "Trocar Agente") { onSwitchAgentClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -185,7 +186,7 @@ private fun IntegratedModulesCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = null,
+                    contentDescription = "Módulo de Voz Integrado",
                     tint = Color(0xFFFF2A85),
                     modifier = Modifier.size(20.dp)
                 )
@@ -244,7 +245,7 @@ private fun LivePerformanceCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.BarChart,
-                    contentDescription = null,
+                    contentDescription = "Performance ao Vivo",
                     tint = Color(0xFFFF2A85),
                     modifier = Modifier.size(18.dp)
                 )

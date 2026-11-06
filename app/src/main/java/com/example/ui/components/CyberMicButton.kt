@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
 
 /**
  * Concentric Rainbow Ring Mic Button from the reference design.
@@ -287,6 +288,8 @@ fun CyberMicButton(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    role = Role.Button,
+                    onClickLabel = "Falar com IA",
                     onClick = onClick
                 ),
             contentAlignment = Alignment.Center
