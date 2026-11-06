@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.example.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.ui.semantics.Role
 
 @Composable
 fun NeuralVoiceOrb(
@@ -93,6 +94,8 @@ fun NeuralVoiceOrb(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = true, color = NeonCyan),
+                role = Role.Button,
+                onClickLabel = "Falar com IA",
                 onClick = onClick
             ),
         contentAlignment = Alignment.Center

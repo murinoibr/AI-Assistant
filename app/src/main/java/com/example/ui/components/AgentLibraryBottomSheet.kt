@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.AgentEntity
 import com.example.ui.theme.*
 import com.example.viewmodel.MainViewModel
+import androidx.compose.ui.semantics.Role
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +105,7 @@ fun AgentLibraryBottomSheet(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(role = Role.Button, onClickLabel = "Selecionar Agente") {
                                 viewModel.selectAgent(agent)
                                 onDismiss()
                             },

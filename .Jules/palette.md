@@ -4,3 +4,6 @@
 ## 2024-10-27 - Added Confirmation Dialog for Delete Agent Action
 **Learning:** Implementing a confirmation dialog for destructive actions (like deleting an agent) is a crucial UX pattern. It prevents accidental data loss and provides a clearer interaction flow, ensuring users are confident before confirming irreversible choices.
 **Action:** Always consider adding confirmation modals or inline confirmations for actions that modify or delete user data. Ensure to use local state to track the item targeted for deletion and provide distinct confirmation and cancellation buttons.
+## 2024-11-23 - Added descriptive contentDescription strings to functionally interactive Icons and Roles to Modifiers
+**Learning:** Implementing explicit roles and descriptions increases app accessibility. It provides a clearer contextual description and role to screen readers making sure disabled people can interact efficiently with the app.
+**Action:** Replaced contentDescription = null with actual localized, descriptive strings for functionally interactive icons and added Role.Button and onClickLabel to custom interactive components that use .clickable.
