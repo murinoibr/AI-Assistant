@@ -766,7 +766,7 @@ private fun SettingsScreen(
             ),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Adicionar Agente", tint = Color.Black)
+            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
             Spacer(modifier = Modifier.width(8.dp))
             Text("CRIAR NOVO AGENTE POR VOZ", color = Color.Black, fontWeight = FontWeight.Bold)
         }
@@ -965,7 +965,7 @@ private fun SettingsScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
-                    contentDescription = "Testar TTS",
+                    contentDescription = null,
                     tint = Color(0xFF00E5FF),
                     modifier = Modifier.size(16.dp)
                 )
@@ -1245,7 +1245,7 @@ private fun SettingsScreen(
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Abrir",
+                    contentDescription = null,
                     tint = Color(0xFF64748B),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1281,7 +1281,7 @@ private fun SettingsScreen(
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Abrir",
+                    contentDescription = null,
                     tint = Color(0xFF64748B),
                     modifier = Modifier.size(18.dp)
                 )
