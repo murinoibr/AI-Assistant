@@ -185,7 +185,7 @@ private fun IntegratedModulesCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = null,
+                    contentDescription = "Ícone de Microfone",
                     tint = Color(0xFFFF2A85),
                     modifier = Modifier.size(20.dp)
                 )
@@ -244,7 +244,7 @@ private fun LivePerformanceCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.BarChart,
-                    contentDescription = null,
+                    contentDescription = "Ícone de Gráfico",
                     tint = Color(0xFFFF2A85),
                     modifier = Modifier.size(18.dp)
                 )
