@@ -243,7 +243,7 @@ fun VoiceAgentCreationSheet(
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = null,
+                    contentDescription = "Ícone de Edição Manual",
                     tint = NeonBlue,
                     modifier = Modifier.size(16.dp)
                 )
@@ -342,7 +342,7 @@ fun VoiceAgentCreationSheet(
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                         enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
                     ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Criar Agente", tint = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Criar e Iniciar Conversa",
