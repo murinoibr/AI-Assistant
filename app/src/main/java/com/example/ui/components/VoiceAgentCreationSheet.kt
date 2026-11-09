@@ -28,6 +28,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -137,7 +138,7 @@ fun VoiceAgentCreationSheet(
                         ),
                         shape = CircleShape
                     )
-                    .clickable {
+                    .clickable(role = Role.Button, onClickLabel = "Iniciar ou parar gravação") {
                         if (isListening) {
                             speechRecognizer?.stopListening()
                             isListening = false
@@ -236,14 +237,14 @@ fun VoiceAgentCreationSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showManualForm = !showManualForm }
+                    .clickable(role = Role.Button, onClickLabel = "Alternar formulário manual") { showManualForm = !showManualForm }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = null,
+                    contentDescription = "Editar formulário manual",
                     tint = NeonBlue,
                     modifier = Modifier.size(16.dp)
                 )
@@ -342,7 +343,7 @@ fun VoiceAgentCreationSheet(
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                         enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
                     ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Auto Awesome", tint = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Criar e Iniciar Conversa",

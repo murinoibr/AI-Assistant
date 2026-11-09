@@ -48,6 +48,9 @@ jobs:
           # Copia também para dentro da pasta app/ por precaução
           cp debug.keystore app/ 2>/dev/null || true
 
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 9.3.1
+
       - name: Localizar projeto e compilar APK
         run: |
           PROJECT_ROOT=$(dirname $(find . -name "settings.gradle*" -o -name "build.gradle.kts" | head -n 1))

@@ -226,7 +226,7 @@ fun CreateAgentScreen(
             shape = RoundedCornerShape(16.dp),
             enabled = name.isNotBlank() && systemPrompt.isNotBlank() && !isLoading
         ) {
-            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
+            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Salvar e Iniciar")
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Salvar e Iniciar Conversa", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
