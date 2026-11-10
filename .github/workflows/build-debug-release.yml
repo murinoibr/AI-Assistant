@@ -16,11 +16,15 @@ jobs:
       packages: read
 
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
       - name: 🔧 Setup Java 17 (Required for sdkmanager)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -31,8 +35,14 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;36.0.0'
 
-      - name: 📋 Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: 🔑 Generate Debug Keystore
+        run: |
+          rm -f debug.keystore
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cp debug.keystore app/
+
+      - name: 📋 Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 9.3.1
 
       - name: 🧹 Clean build
         run: ./gradlew clean
