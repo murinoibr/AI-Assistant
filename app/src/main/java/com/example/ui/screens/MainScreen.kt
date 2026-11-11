@@ -199,7 +199,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Mic,
-                        contentDescription = null,
+                        contentDescription = "Microfone",
                         tint = Color(0xFF00E5FF),
                         modifier = Modifier.size(22.dp)
                     )
@@ -565,7 +565,7 @@ private fun InteractionScreen(
                                         tint = Color(0xFF00E5FF),
                                         modifier = Modifier
                                             .size(18.dp)
-                                            .clickable { onReplayTts(msg.text) }
+                                            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Ouvir mensagem") { onReplayTts(msg.text) }
                                     )
                                 }
                             }
@@ -765,7 +765,7 @@ private fun SettingsScreen(
             ),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+            Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = Color.Black)
             Spacer(modifier = Modifier.width(8.dp))
             Text("CRIAR NOVO AGENTE POR VOZ", color = Color.Black, fontWeight = FontWeight.Bold)
         }
@@ -799,7 +799,7 @@ private fun SettingsScreen(
                             if (isSelected) Color(0xFF00E5FF) else Color(0xFF1E293B),
                             RoundedCornerShape(14.dp)
                         )
-                        .clickable { onSelectAgent(agent) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Selecionar agente ${agent.name}") { onSelectAgent(agent) }
                         .padding(12.dp)
                 ) {
                     Row(
@@ -862,7 +862,7 @@ private fun SettingsScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
-                    contentDescription = null,
+                    contentDescription = "Volume",
                     tint = Color(0xFF00E5FF),
                     modifier = Modifier.size(18.dp)
                 )
@@ -898,7 +898,7 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetSpeechRate(rate) }
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Definir velocidade para $label") { onSetSpeechRate(rate) }
                     ) {
                         Text(
                             text = label,
@@ -939,7 +939,7 @@ private fun SettingsScreen(
                         color = if (isCurrent) Color(0xFF00E5FF) else Color(0xFF141F32),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSetLanguage(loc) }
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Mudar idioma para $label") { onSetLanguage(loc) }
                     ) {
                         Text(
                             text = label,
@@ -964,7 +964,7 @@ private fun SettingsScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
-                    contentDescription = null,
+                    contentDescription = "Volume",
                     tint = Color(0xFF00E5FF),
                     modifier = Modifier.size(16.dp)
                 )
@@ -995,7 +995,7 @@ private fun SettingsScreen(
             ) {
                 Icon(
                     Icons.Default.GraphicEq,
-                    contentDescription = null,
+                    contentDescription = "Filtro de Ruído",
                     tint = Color(0xFFFF2A85),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1029,7 +1029,7 @@ private fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 3.dp)
-                        .clickable { onSetVadMode(mode) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Mudar modo de VAD para ${mode.name}") { onSetVadMode(mode) }
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -1222,7 +1222,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showPrivacyDialog = true }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Mostrar diálogo de privacidade") { showPrivacyDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1230,7 +1230,7 @@ private fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Shield,
-                        contentDescription = null,
+                        contentDescription = "Escudo de privacidade",
                         tint = Color(0xFF00E5FF),
                         modifier = Modifier.size(18.dp)
                     )
@@ -1244,7 +1244,7 @@ private fun SettingsScreen(
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
+                    contentDescription = "Seta para direita",
                     tint = Color(0xFF64748B),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1258,7 +1258,7 @@ private fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showClearConfirmDialog = true }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Mostrar diálogo para limpar histórico") { showClearConfirmDialog = true }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1266,7 +1266,7 @@ private fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = null,
+                        contentDescription = "Deletar histórico",
                         tint = Color(0xFFEF4444),
                         modifier = Modifier.size(18.dp)
                     )
@@ -1280,7 +1280,7 @@ private fun SettingsScreen(
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
+                    contentDescription = "Seta para direita",
                     tint = Color(0xFF64748B),
                     modifier = Modifier.size(18.dp)
                 )
