@@ -137,7 +137,7 @@ fun VoiceAgentCreationSheet(
                         ),
                         shape = CircleShape
                     )
-                    .clickable {
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = if (isListening) "Parar de ouvir" else "Começar a ouvir") {
                         if (isListening) {
                             speechRecognizer?.stopListening()
                             isListening = false
@@ -236,14 +236,14 @@ fun VoiceAgentCreationSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showManualForm = !showManualForm }
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Alternar formulário manual") { showManualForm = !showManualForm }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = null,
+                    contentDescription = "Editar",
                     tint = NeonBlue,
                     modifier = Modifier.size(16.dp)
                 )
@@ -342,7 +342,7 @@ fun VoiceAgentCreationSheet(
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                         enabled = manualName.isNotBlank() && manualPrompt.isNotBlank() && !isLoading
                     ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black)
+                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Ícone de brilho mágico", tint = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Criar e Iniciar Conversa",
